@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Gerenciar Tipos de Resposta{% endblock %}
+{% block content %}
+<div class="list-card">
+    <h2>Gerenciar Tipos de Resposta</h2>
+    <p>Adicione, edite ou remova os conjuntos de respostas que podem ser usados nos checklists.</p>
+    
+    <div class="item-list">
+        {% for r_type in response_types %}
+        <li>
+            <span>{{ r_type.Nome }}</span>
+            <div class="item-actions">
+                <a href="{{ url_for('edit_response_type', type_id=r_type.ID) }}" class="btn-secondary">Editar</a>
+                <form action="{{ url_for('delete_response_type', type_id=r_type.ID) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja apagar este tipo de resposta?');">
+                    <button type="submit" class="btn-danger">Apagar</button>
+                </form>
+            </div>
+        </li>
+        {% else %}
+        <p>Nenhum tipo de resposta personalizado foi criado ainda.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<form class="form-card" method="POST" action="{{ url_for('create_response_type') }}">
+    <h3>Criar Novo Tipo de Resposta</h3>
+    <div class="form-group">
+        <label for="name">Nome do Conjunto (Ex: "Conformidade", "Avaliação Simples")</label>
+        <input type="text" name="name" required>
+    </div>
+    <div class="form-group">
+        <label>Opções de Resposta (mínimo 2)</label>
+        <div id="options-container">
+            <input type="text" name="options[]" placeholder="Opção 1" required>
+            <input type="text" name="options[]" placeholder="Opção 2" required>
+        </div>
+        <button type="button" id="add-option-btn" class="btn-secondary" style="margin-top: 10px;">Adicionar outra opção</button>
+    </div>
+    <button type="submit">Salvar Novo Tipo</button>
+</form>
+
+<script>
+document.getElementById('add-option-btn').addEventListener('click', function() {
+    const container = document.getElementById('options-container');
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.name = 'options[]';
+    input.placeholder = `Opção ${container.children.length + 1}`;
+    input.style.marginTop = '10px';
+    container.appendChild(input);
+});
+</script>
+
+<style>
+    /* Estilos para os botões de ação e alinhamento */
+    .item-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .item-list li:last-child {
+        border-bottom: none;
+    }
+    .item-actions {
+        display: flex;
+        gap: 10px;
+    }
+    .btn-danger, .btn-secondary {
+        padding: 8px 15px;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    .btn-danger { background-color: #dc3545; }
+    .btn-secondary { background-color: #6c757d; }
+</style>
+{% endblock %}

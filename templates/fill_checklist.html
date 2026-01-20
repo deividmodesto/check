@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% block title %}{% if is_resubmit %}Editar Respostas do Checklist{% else %}Preencher Checklist{% endif %}{% endblock %}
+{% block content %}
+    <form class="form-card" method="POST" 
+          action="{% if is_resubmit %}{{ url_for('save_resubmission', submission_id=submission_id) }}{% else %}{{ url_for('fill_checklist', checklist_id=checklist.ID) }}{% endif %}" 
+          id="fill-checklist-form" enctype="multipart/form-data">
+
+        <h2>{% if is_resubmit %}Editando Respostas: {% endif %}{{ checklist.Titulo }}</h2>
+        <p>Preencha todos os itens de verificação abaixo.</p>
+        <hr>
+        
+        {% for component in checklist.Componentes %}
+            {% set items_to_render = component.children if component.data.TipoComponente == 'CATEGORIA' else [component] %}
+            {% for item in items_to_render %}
+                {% set item_data = item.data %}
+                <div class="item-card">
+                    <p class="item-question">{{ item_data.TextoComponente }}</p>
+                    {% if item_data.Instrucao %}<p class="item-instruction">{{ item_data.Instrucao }}</p>{% endif %}
+                    <hr>
+                    <div class="item-responses-wrapper">
+                        {% for rt in item.response_types %}
+                            {% set rt_details = rt.details %}
+                            {% set current_answer = existing_answers[item_data.ID][rt_details.ID] if existing_answers and item_data.ID in existing_answers and rt_details.ID in existing_answers[item_data.ID] else '' %}
+                            <div class="response-group">
+                                {% if rt_details.TipoInput != 'textarea' %}<label class="response-label">{{ rt_details.Nome }}:</label>{% endif %}
+                                
+                                {% if rt_details.TipoInput == 'radio' %}
+                                    <div class="radio-group">
+                                        {% for option in rt.options %}
+                                            <div class="radio-item">
+                                                <input type="radio" id="answer_{{ item_data.ID }}_{{ rt_details.ID }}_{{ loop.index }}" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" value="{{ option }}" {% if option == current_answer %}checked{% endif %} required>
+                                                <label for="answer_{{ item_data.ID }}_{{ rt_details.ID }}_{{ loop.index }}">{{ option }}</label>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% elif rt_details.TipoInput == 'file' %}
+                                    <input type="file" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" accept="image/*" multiple>
+                                    {% if current_answer %}<p class="current-file-notice"><i>Arquivos atuais serão mantidos se nenhum novo for enviado.</i></p>{% endif %}
+                                {% elif rt_details.TipoInput == 'date' %}
+                                    <input type="date" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" class="form-control" value="{{ current_answer }}" required>
+                                {% elif rt_details.TipoInput == 'textarea' %}
+                                    <textarea name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" rows="3" placeholder="Digite a observação principal aqui..." class="form-control" required>{{ current_answer }}</textarea>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="response-group">
+                            <label class="response-label-optional">Observação Adicional (Opcional)</label>
+                            <input type="text" name="observation_{{ item_data.ID }}" class="form-control" placeholder="Algum detalhe extra?">
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        <div class="participants-section">
+    <h3>Participantes da Auditoria</h3>
+    <div class="form-group">
+        <label for="worker_name">Nome do Trabalhador Auditado:</label>
+        <input type="text" id="worker_name" name="worker_name" class="form-control">
+    </div>
+    <div class="form-group">
+        <label for="area_manager_name">Nome do Responsável pela Área:</label>
+        <input type="text" id="area_manager_name" name="area_manager_name" class="form-control">
+    </div>
+</div>
+        <div class="submit-container">
+            <button type="submit">{% if is_resubmit %}Salvar Alterações{% else %}Enviar Checklist{% endif %}</button>
+        </div>
+    </form>
+
+    <style>
+        .report-header { text-align: center; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 20px; }
+        .report-header h2 { color: var(--cor-principal); }
+        .category-title { background-color: var(--cor-principal); color: white; padding: 10px 15px; border-radius: 5px; margin-top: 30px; }
+        .category-instruction { background-color: #f8f9fa; padding: 10px; border-left: 3px solid var(--cor-acao); font-style: italic; margin-bottom: 20px; }
+
+        .item-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .item-question { font-size: 1.2em; font-weight: bold; margin-top: 0; color: #333; }
+        .item-instruction { font-size: 0.9em; color: #555; font-style: italic; margin-top: -10px; margin-bottom: 15px; }
+        .item-card hr { border: 0; border-top: 1px solid #eee; margin: 15px 0; }
+
+        .item-responses-wrapper { display: flex; flex-direction: column; gap: 20px; }
+        .response-group { display: flex; flex-direction: column; }
+        .response-label { font-weight: bold; margin-bottom: 8px; }
+        .response-label-optional { margin-bottom: 8px; font-style: italic; color: #555; }
+
+        .radio-group { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+        .radio-item { display: flex; align-items: center; gap: 5px; }
+        .submit-container { text-align: center; margin-top: 30px; }
+        .submit-container button { width: 50%; max-width: 300px; padding: 15px; font-size: 1.1em; }
+    </style>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Relatórios - Reunidas Check{% endblock %}
+{% block content %}
+
+<div class="form-card" id="report-filters">
+    <h2>Emitir Relatório de Checklist</h2>
+    <form method="POST">
+        <div class="filter-grid">
+            <div class="form-group">
+                <label for="checklist_id">Filtrar por Checklist:</label>
+                <select name="checklist_id" id="checklist_id">
+                    <option value="">-- Todos --</option>
+                    {% for chk in checklists %}<option value="{{ chk.ID }}" {% if filters.checklist_id == chk.ID|string %}selected{% endif %}>{{ chk.Titulo }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="user_id">Filtrar por Colaborador:</label>
+                <select name="user_id" id="user_id">
+                    <option value="">-- Todos --</option>
+                    {% for user in users %}<option value="{{ user.ID }}" {% if filters.user_id == user.ID|string %}selected{% endif %}>{{ user.NomeUsuario }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="start_date">Data de Início:</label>
+                <input type="date" name="start_date" id="start_date" value="{{ filters.start_date or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="end_date">Data Final:</label>
+                <input type="date" name="end_date" id="end_date" value="{{ filters.end_date or '' }}">
+            </div>
+            <div class="form-group">
+                <label for="question">Filtrar por Pergunta:</label>
+                <select name="question" id="question">
+                    <option value="">-- Todas --</option>
+                    {% for q in questions %}<option value="{{ q }}" {% if filters.question == q %}selected{% endif %}>{{ q }}</option>{% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="answer">Filtrar por Resposta (contém):</label>
+                <input type="text" name="answer" id="answer" value="{{ filters.answer or '' }}" placeholder="Ex: Não Conforme">
+            </div>
+        </div>
+        <button type="submit">Gerar Relatório</button>
+        {% if report_data is not none %}<button type="button" onclick="window.print();" class="btn-secondary">Imprimir</button>{% endif %}
+    </form>
+</div>
+
+{% if report_data is not none %}
+<div class="list-card" id="report-results">
+    <h3>Resultados do Relatório</h3>
+    {% if report_data %}
+        <table class="report-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Checklist</th>
+                    <th>Colaborador</th>
+                    <th>Pergunta / Item</th>
+                    <th>Resposta</th>
+                    <th>Observação</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in report_data %}
+                <tr>
+                    <td>{{ item.DataSubmissao.strftime('%d/%m/%Y') }}</td>
+                    <td>{{ item.ChecklistTitulo }}</td>
+                    <td>{{ item.NomeUsuario }}</td>
+                    <td>{{ item.TextoComponente }}</td>
+                    <td {% if item.Resposta == 'Não Conforme' %}class="non-compliant-cell"{% endif %}>
+                        {% if item.photo_list and item.photo_list[0] %}
+                            <div class="report-photo-gallery">
+                            {% for photo in item.photo_list %}
+                                <a href="{{ url_for('uploaded_file', filename=photo) }}" target="_blank">
+                                    <img src="{{ url_for('uploaded_file', filename=photo) }}" class="report-thumbnail" alt="Foto Anexada">
+                                </a>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            {{ item.Resposta }}
+                        {% endif %}
+                    </td>
+                    <td>{{ item.Observacao or 'N/A' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if report_scores %}
+            {% set valid_scores = report_scores.values() | selectattr('total') | list %}
+            {% if valid_scores %}
+                {% set total_compliant = valid_scores | sum(attribute='compliant') %}
+                {% set total_auditable = valid_scores | sum(attribute='total') %}
+                {% if total_auditable > 0 %}
+                    {% set total_percentage = (total_compliant / total_auditable) * 100 %}
+                    {% set total_flagged = total_auditable - total_compliant %}
+                    <div class="audit-score-box">
+    <strong>Resumo Geral da Conformidade (apenas checklists pontuáveis):</strong> {{ total_compliant }}/{{ total_auditable }} 
+    ({{ "%.2f"|format(total_percentage) }}%) - Total de itens sinalizados: {{ total_flagged }}
+    {% set total_na = valid_scores | sum(attribute='not_applicable') %}
+    <span class="na-items">- Total Não Aplicáveis: {{ total_na }}</span>
+</div>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <p>Nenhum resultado encontrado para os filtros selecionados.</p>
+    {% endif %}
+</div>
+{% endif %}
+<style>
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px; }
+    .report-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; }
+    .report-table th, .report-table td { border: 1px solid #ddd; padding: 8px; text-align: left; vertical-align: middle; }
+    .report-table th { background-color: #f8f9fa; font-weight: bold; }
+    .report-table td.non-compliant-cell { color: var(--cor-perigo); font-weight: bold; }
+    .report-photo-gallery { display: flex; flex-wrap: wrap; gap: 5px; }
+    .report-thumbnail { max-width: 80px; height: auto; border-radius: 4px; border: 1px solid #ccc; }
+    .audit-score-box .na-items {
+    color: #6c757d; /* Cinza */
+    margin-left: 10px;
+    font-weight: normal;
+}
+    .btn-secondar.y { background-color: #6c757d; }
+    .audit-score-box .na-items {
+    color: #6c757d; /* Cinza */
+    margin-left: 10px;
+    font-weight: normal;
+}
+
+    @media print {
+        body * { visibility: hidden; }
+        #report-results, #report-results * { visibility: visible; }
+        #report-results { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px; box-shadow: none; border: none; font-size: 9pt; }
+        .list-card { border: none; }
+        .report-table th, .report-table td { padding: 4px; }
+        .report-thumbnail { max-width: 60px; }
+        a { text-decoration: none; color: inherit; }
+    }
+</style>
+{% endblock %}

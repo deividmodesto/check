@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Usuários{% endblock %}
+
+{% block content %}
+<div class="list-card">
+    <h2>Gerenciar Usuários</h2>
+    <p>Visualize e gerencie os usuários colaboradores associados a você.</p>
+
+    {% if users %}
+        <ul class="item-list">
+            {% for user in users %}
+                <li>
+                    <div class="item-info">
+                        <strong>{{ user.NomeUsuario }}</strong>
+                        <span>Papel: {{ user.Papel }}</span>
+                    </div>
+                    <div class="item-actions">
+                        <a href="{{ url_for('edit_user', user_id=user.ID) }}" class="btn-secondary">Editar</a>
+                        
+                        <form action="{{ url_for('reset_password', user_id=user.ID) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja gerar uma NOVA senha para este usuário?');">
+                            <button type="submit" class="btn-warning">Resetar Senha</button>
+                        </form>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Você não possui colaboradores associados para gerenciar.</p>
+    {% endif %}
+</div>
+
+<style>
+    .item-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-secondary, .btn-warning {
+        padding: 8px 15px;
+        text-decoration: none;
+        color: white;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+    }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-warning { background-color: var(--cor-acao); }
+</style>
+{% endblock %}

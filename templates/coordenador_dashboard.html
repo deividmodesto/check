@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard do Coordenador{% endblock %}
+
+{% block content %}
+    <h2>Painel do Coordenador</h2>
+    <p>Bem-vindo, {{ session.username }}. A partir daqui você pode gerenciar seus checklists, setores e colaboradores.</p>
+    
+    <div class="dashboard-grid">
+        <div class="dashboard-main-actions">
+            <h3>Ações Principais</h3>
+            <a href="{{ url_for('create_flexible_checklist') }}" class="action-card">Criar Checklist</a>
+            <a href="{{ url_for('create_user') }}" class="action-card">Criar Usuário</a>
+            <a href="{{ url_for('create_sector') }}" class="action-card">Criar Novo Setor</a>
+            <a href="{{ url_for('manage_checklists') }}" class="action-card">Editar / Apagar Checklists</a>
+            <a href="{{ url_for('manage_sectors') }}" class="action-card">Gerenciar Setores</a>
+            <a href="{{ url_for('manage_users') }}" class="action-card">Gerenciar Usuários</a>
+            <a href="{{ url_for('manage_response_types') }}" class="action-card">Gerenciar Respostas</a>
+            <a href="{{ url_for('view_responses') }}" class="action-card">Ver Respostas</a>
+            <a href="{{ url_for('reports') }}" class="action-card">Emitir Relatórios</a>
+        </div>
+
+        <div class="info-card">
+            <h3>Meus Setores</h3>
+            {% if sectors %}
+                <ul>
+                    {% for sector in sectors %}
+                        <li>{{ sector.Nome }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Você ainda não foi associado a nenhum setor.</p>
+            {% endif %}
+        </div>
+
+        <div class="info-card">
+            <h3>Meus Colaboradores</h3>
+            {% if collaborators %}
+                <ul>
+                    {% for collab in collaborators %}
+                        <li>{{ collab.NomeUsuario }}</li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>Você ainda não possui colaboradores associados.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

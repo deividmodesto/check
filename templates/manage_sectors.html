@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Meus Setores{% endblock %}
+
+{% block content %}
+    <form class="form-card" method="POST">
+        <h2>Gerenciar Meus Setores</h2>
+        <p>Marque os setores aos quais você pertence. Os checklists desses setores ficarão disponíveis para seus colaboradores.</p>
+        <hr>
+
+        <div class="form-group">
+            <label>Setores Disponíveis:</label>
+            <div class="checkbox-group">
+                {% for sector in all_sectors %}
+                    <div class="checkbox-item">
+                        <input 
+                            type="checkbox" 
+                            id="sector_{{ sector.ID }}" 
+                            name="sector_ids" 
+                            value="{{ sector.ID }}"
+                            {% if sector.ID in my_sector_ids %}checked{% endif %}>
+                        <label for="sector_{{ sector.ID }}">{{ sector.Nome }}</label>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <button type="submit">Salvar Alterações</button>
+        <a href="{{ url_for('dashboard') }}" class="btn-back">Cancelar</a>
+    </form>
+    
+    <style>
+        .checkbox-group {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 15px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .checkbox-item {
+            display: block;
+            margin-bottom: 10px;
+        }
+        .checkbox-item input {
+            margin-right: 10px;
+        }
+        .btn-back {
+            background-color: #6c757d;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+    </style>
+{% endblock %}

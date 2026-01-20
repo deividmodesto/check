@@ -1,0 +1,29 @@
+<div class="item-card">
+    <p class="item-question">{{ item.data.TextoComponente }}</p>
+    {% if item.data.Instrucao %}<p class="item-instruction">{{ item.data.Instrucao }}</p>{% endif %}
+    <hr>
+    <div class="item-answers">
+        {% for answer in item.answers %}
+            <div class="answer-pair">
+                <span class="answer-label">{{ answer.tipo_nome }}:</span>
+                {% if answer.tipo_input == 'file' and answer.fotos %}
+                    <div class="answer-photo-gallery">
+                        {% for photo in answer.fotos %}
+                        <a href="{{ url_for('uploaded_file', filename=photo) }}" target="_blank" title="Clique para ampliar">
+                            <img src="{{ url_for('uploaded_file', filename=photo) }}" alt="Foto Anexada">
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <span class="answer-value {% if answer.is_conforme == False %}non-compliant{% elif answer.is_conforme == True %}compliant{% endif %}">{{ answer.valor }}</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+        {% if item.answers and item.answers|length > 0 and item.answers[0].observacao %}
+            <div class="answer-pair observation">
+                <span class="answer-label">Observação Adicional:</span>
+                <span class="answer-value">{{ item.answers[0].observacao }}</span>
+            </div>
+        {% endif %}
+    </div>
+</div>

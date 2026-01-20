@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Preencher Checklist{% endblock %}
+
+{% block content %}
+    <form class="form-card" method="POST" id="fill-checklist-form">
+        <h2>{{ checklist.Titulo }}</h2>
+        <p>Preencha todos os itens de verificação abaixo.</p>
+        <hr>
+
+        {% for component in checklist.Componentes %}
+            
+            {% if component.data.TipoComponente == 'CATEGORIA' %}
+                <div class="category-block">
+                    <h3>{{ component.data.TextoComponente }}</h3>
+                    
+                    {% for sub_item in component.children %}
+                        <div class="item-block">
+                            <label class="item-label">{{ sub_item.data.TextoComponente }}</label>
+                            
+                            <div class="response-container">
+                                {% if sub_item.options %}
+                                    <div class="radio-group">
+                                        {% for option in sub_item.options %}
+                                        <div class="radio-item">
+                                            <input type="radio" id="answer_{{ sub_item.data.ID }}_{{ loop.index }}" name="answer_{{ sub_item.data.ID }}" value="{{ option }}" required>
+                                            <label for="answer_{{ sub_item.data.ID }}_{{ loop.index }}">{{ option }}</label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <textarea name="answer_{{ sub_item.data.ID }}" rows="2" placeholder="Digite sua observação..." class="form-control" required></textarea>
+                                {% endif %}
+                            </div>
+
+                            <div class="observation-container">
+                                <input type="text" name="observation_{{ sub_item.data.ID }}" class="form-control" placeholder="Observação adicional (opcional)">
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            
+            {% elif component.data.TipoComponente == 'PERGUNTA_SIMPLES' %}
+                <div class="category-block">
+                    <div class="item-block">
+                        <label class="item-label">{{ component.data.TextoComponente }}</label>
+
+                        <div class="response-container">
+                             {% if component.options %}
+                                <div class="radio-group">
+                                    {% for option in component.options %}
+                                    <div class="radio-item">
+                                        <input type="radio" id="answer_{{ component.data.ID }}_{{ loop.index }}" name="answer_{{ component.data.ID }}" value="{{ option }}" required>
+                                        <label for="answer_{{ component.data.ID }}_{{ loop.index }}">{{ option }}</label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <textarea name="answer_{{ component.data.ID }}" rows="2" placeholder="Digite sua observação..." class="form-control" required></textarea>
+                            {% endif %}
+                        </div>
+
+                        <div class="observation-container">
+                             <input type="text" name="observation_{{ component.data.ID }}" class="form-control" placeholder="Observação adicional (opcional)">
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <button type="submit">Enviar Checklist</button>
+    </form>
+    
+    <style>
+        .category-block { background-color: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .category-block h3 { margin-top: 0; border-bottom: 2px solid #012E23; padding-bottom: 10px; }
+        .item-block { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: center; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .item-block:last-child { border-bottom: none; }
+        .item-label { font-weight: bold; }
+        .radio-group { display: flex; gap: 20px; }
+        .radio-item { display: flex; align-items: center; }
+        .radio-item input { margin-right: 5px; }
+    </style>
+{% endblock %}

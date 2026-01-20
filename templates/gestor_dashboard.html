@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard do Gestor{% endblock %}
+
+{% block content %}
+    <h2>Painel do Gestor</h2>
+    <p>A partir daqui você pode gerenciar os checklists e usuários do seu departamento.</p>
+    <div class="dashboard-actions">
+    <a href="{{ url_for('create_checklist') }}" class="action-card">Criar Checklist</a>
+    <a href="{{ url_for('view_responses') }}" class="action-card">Ver Respostas</a>
+    <a href="{{ url_for('create_user') }}" class="action-card">Criar Usuário</a>
+</div>
+{% endblock %}

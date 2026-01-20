@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Usuário{% endblock %}
+
+{% block content %}
+    <form class="form-card" method="POST" action="{{ url_for('edit_user', user_id=user.ID) }}">
+        <h2>Editando Usuário: {{ user.NomeUsuario }}</h2>
+        
+        <div class="form-group">
+            <label for="username">Nome de Usuário</label>
+            <input type="text" id="username" name="username" value="{{ user.NomeUsuario }}" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="role">Papel do Usuário:</label>
+            <select id="role" name="role" onchange="toggleCoordinatorSelect()">
+                <option value="COLABORADOR" {% if user.Papel == 'COLABORADOR' %}selected{% endif %}>Colaborador</option>
+                <option value="COORDENADOR" {% if user.Papel == 'COORDENADOR' %}selected{% endif %}>Coordenador</option>
+                <option value="GESTOR" {% if user.Papel == 'GESTOR' %}selected{% endif %}>Gestor</option>
+            </select>
+        </div>
+
+        <div class="form-group" id="coordinator-group">
+            <label for="coordinator_id">Associar ao Coordenador:</label>
+            <select id="coordinator_id" name="coordinator_id">
+                <option value="">-- Nenhum --</option>
+                {% for coord in coordinators %}
+                    <option value="{{ coord.ID }}" {% if user.CoordenadorID == coord.ID %}selected{% endif %}>
+                        {{ coord.NomeUsuario }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Salvar Alterações</button>
+        <a href="{{ url_for('manage_users') }}" class="btn-secondary" style="background-color: #6c757d; text-decoration: none;">Cancelar</a>
+    </form>
+
+    <script>
+        // Script para esconder/mostrar o seletor de coordenador
+        function toggleCoordinatorSelect() {
+            const roleSelect = document.getElementById('role');
+            const coordinatorGroup = document.getElementById('coordinator-group');
+            // Se o papel for Colaborador, mostra. Caso contrário, esconde.
+            if (roleSelect.value === 'COLABORADOR') {
+                coordinatorGroup.style.display = 'block';
+            } else {
+                coordinatorGroup.style.display = 'none';
+            }
+        }
+        // Executa a função uma vez no carregamento da página
+        document.addEventListener('DOMContentLoaded', toggleCoordinatorSelect);
+    </script>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar Novo Usuário{% endblock %}
+
+{% block content %}
+    <form class="form-card" method="POST">
+        <h2>Criar Novo Usuário</h2>
+        <p>Você pode criar um novo Coordenador (que será independente) ou um novo Colaborador (que será associado a você).</p>
+        
+        <div class="form-group">
+            <label for="username">Nome de Usuário</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Senha Provisória</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="role">Papel do Novo Usuário:</label>
+            <select id="role" name="role">
+                <option value="COLABORADOR">Colaborador (Associado a mim)</option>
+                <option value="COORDENADOR">Coordenador</option>
+            </select>
+        </div>
+
+        <button type="submit">Salvar Usuário</button>
+    </form>
+{% endblock %}

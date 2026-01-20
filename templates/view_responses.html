@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Respostas Recebidas{% endblock %}
+
+{% block content %}
+    <div class="list-card">
+        <h2>Respostas Recebidas</h2>
+        <p>Abaixo estão as versões mais recentes dos checklists preenchidos pelos colaboradores dos seus setores.</p>
+
+        <div class="checklist-grid">
+            {% if submissions %}
+                {% for sub in submissions %}
+                    <div class="checklist-item-card">
+                        <div class="item-info">
+                            <span class="item-title">{{ sub.Titulo }}</span>
+                            <span class="item-meta">
+                                Respondido por: {{ sub.NomeUsuario }} em {{ sub.DataSubmissao.strftime('%d/%m/%Y às %H:%M') }}
+                            </span>
+                        </div>
+                        <div class="item-actions">
+                            <a href="{{ url_for('submission_details', submission_id=sub.ID) }}" class="btn-action btn-view">Ver Detalhes</a>
+                            <form action="{{ url_for('edit_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Isso criará uma nova versão editável e arquivará a original. Deseja continuar?');">
+                                <button type="submit" class="btn-action btn-edit">Editar</button>
+                            </form>
+                            <form action="{{ url_for('delete_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar esta resposta permanentemente?');">
+                                <button type="submit" class="btn-action btn-delete">Apagar</button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <p>Nenhuma resposta de checklist foi encontrada.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <style>
+        .checklist-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .checklist-item-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: var(--borda-radius);
+            border: 1px solid #e9e9e9;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .checklist-item-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .item-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .item-title {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: var(--cor-texto);
+        }
+        .item-meta {
+            font-size: 0.9em;
+            color: #6c757d;
+        }
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .btn-action {
+            padding: 8px 15px;
+            text-decoration: none;
+            color: white;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-view { background-color: var(--cor-secundaria); }
+        .btn-edit { background-color: #6c757d; }
+        .btn-delete { background-color: var(--cor-perigo); }
+
+        .empty-state {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            border-radius: 5px;
+            color: #6c757d;
+            border: 1px dashed #ddd;
+        }
+    </style>
+{% endblock %}

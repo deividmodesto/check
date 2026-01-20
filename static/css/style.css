@@ -1,0 +1,251 @@
+/* static/css/style.css */
+
+/* 1. Definição das variáveis de cor e fontes globais */
+:root {
+    --cor-principal: #012E23; /* Verde escuro */
+    --cor-secundaria: #05B540; /* Verde claro (destaque) */
+    --cor-acao: #FFAA00;       /* Amarelo/Laranja para botões e alertas */
+    --cor-perigo: #FF6600;      /* Laranja mais forte para erros */
+    --cor-fundo: #f0f2f5;      /* Fundo cinza claro para contraste */
+    --cor-texto: #333;         /* Texto escuro padrão */
+    --cor-texto-claro: #ffffff; /* Texto sobre fundos escuros */
+    --sombra-padrao: 0 4px 8px rgba(0, 0, 0, 0.1);
+    --borda-radius: 8px;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--cor-fundo);
+    color: var(--cor-texto);
+    margin: 0;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+}
+
+/* 2. Estilo do Cabeçalho (com espaço para a logo) */
+header {
+    background-color: var(--cor-principal);
+    color: var(--cor-texto-claro);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: var(--sombra-padrao);
+}
+
+.header-logo-title {
+    display: flex;
+    align-items: center;
+    gap: 15px; /* Espaço entre a logo e o título */
+}
+
+.logo-placeholder {
+    width: 80px; /* Ou o tamanho que preferir */
+    height: 60px;
+    background-color: transparent; /* Fundo transparente */
+    border-radius: var(--borda-radius); /* Usa o mesmo arredondamento dos botões */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden; /* Garante que a imagem não "vaze" do container */
+}
+
+.header-logo-title h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+header nav a {
+    color: var(--cor-texto-claro);
+    text-decoration: none;
+    margin: 0 10px;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+header nav a:hover {
+    background-color: var(--cor-secundaria);
+}
+
+header nav span {
+    color: #ffffff99;
+}
+
+/* 3. Estilo dos Formulários e Cartões */
+.form-card, .list-card, .dashboard-actions, .info-card, .dashboard-grid {
+    background-color: var(--cor-texto-claro);
+    padding: 30px;
+    border-radius: var(--borda-radius);
+    box-shadow: var(--sombra-padrao);
+    margin-top: 20px;
+}
+
+.form-card h2, .list-card h2 {
+    color: var(--cor-principal);
+    border-bottom: 2px solid var(--cor-fundo);
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+select,
+textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: var(--borda-radius);
+    box-sizing: border-box; /* Garante que o padding não afete a largura total */
+}
+
+/* 4. Estilo dos Botões */
+button, .btn-primary, .action-card {
+    background-color: var(--cor-secundaria);
+    color: var(--cor-texto-claro);
+    padding: 12px 20px;
+    border: none;
+    border-radius: var(--borda-radius);
+    cursor: pointer;
+    font-size: 1rem;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover, .btn-primary:hover, .action-card:hover {
+    background-color: #049a37; /* Verde um pouco mais escuro no hover */
+    transform: translateY(-2px);
+}
+
+/* 5. Estilo dos Alertas (Flashed Messages) */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: var(--borda-radius);
+    color: var(--cor-texto-claro);
+    text-align: center;
+}
+
+.alert-success { background-color: var(--cor-secundaria); }
+.alert-warning { background-color: var(--cor-acao); }
+.alert-danger { background-color: var(--cor-perigo); }
+.alert-info { background-color: #17a2b8; }
+
+/* Estilos específicos para o dashboard */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.dashboard-main-actions, .info-card {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: var(--borda-radius);
+}
+
+.dashboard-main-actions a.action-card {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.info-card h3 {
+    color: var(--cor-principal);
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.item-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.item-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.item-list li:last-child {
+    border-bottom: none;
+}
+
+/* Adicione este código no final do seu arquivo static/css/style.css */
+
+/* --- Estilos da Página de Login --- */
+
+/* Remove a margem do container principal na página de login */
+body:has(.login-wrapper) .container {
+    max-width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.login-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; /* Ocupa a altura inteira da tela */
+    padding: 20px;
+    background-color: var(--cor-fundo); /* Fundo cinza claro */
+}
+
+.login-card {
+    background-color: #fff;
+    padding: 40px;
+    border-radius: var(--borda-radius);
+    box-shadow: var(--sombra-padrao);
+    width: 100%;
+    max-width: 400px; /* Largura máxima do card */
+    text-align: center;
+    border-top: 5px solid var(--cor-principal);
+}
+
+.login-logo img {
+    max-width: 150px; /* Ajuste o tamanho da sua logo conforme necessário */
+    margin-bottom: 15px;
+}
+
+.login-card h2 {
+    color: var(--cor-principal);
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 2em;
+}
+
+.login-card .subtitle {
+    color: #6c757d;
+    margin-bottom: 30px;
+}
+
+.login-form .form-group {
+    text-align: left; /* Alinha os labels à esquerda */
+    margin-bottom: 15px;
+}
+
+.login-form .btn-login {
+    width: 100%;
+    margin-top: 10px;
+    padding: 15px;
+    font-size: 1.1em;
+}

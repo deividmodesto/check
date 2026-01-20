@@ -1,0 +1,233 @@
+{% extends 'base.html' %}
+{% block title %}{% if checklist %}Editar Checklist{% else %}Criar Novo Checklist{% endif %}{% endblock %}
+
+{% block content %}
+<form class="form-card" method="POST" id="checklist-form"
+    action="{% if checklist %}{{ url_for('edit_checklist', checklist_id=checklist.data.ID) }}{% else %}{{ url_for('create_flexible_checklist') }}{% endif %}">
+    
+    <h2>{% if checklist %}Editar Checklist{% else %}Criar Novo Checklist{% endif %}</h2>
+    
+    <div class="form-group">
+        <label for="title">Título do Checklist</label>
+        <input type="text" id="title" name="title" value="{{ checklist.data.Titulo if checklist and checklist.data.Titulo else '' }}" required>
+    </div>
+    <div class="form-group">
+        <label for="sector_id">Associar ao Setor:</label>
+        <select id="sector_id" name="sector_id" required>
+            <option value="">-- Selecione um setor --</option>
+            {% for sector in sectors %}
+            <option value="{{ sector.ID }}" {% if checklist and checklist.data.SetorID == sector.ID %}selected{% endif %}>
+                {{ sector.Nome }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <hr>
+    <h4>Componentes do Checklist (Arraste ☰ para reordenar)</h4>
+    <div id="components-container"></div>
+    <button type="button" id="add-simple-question-btn" class="btn-secondary">Adicionar Pergunta Simples</button>
+    <button type="button" id="add-category-btn" class="btn-secondary">Adicionar Categoria</button>
+    <hr>
+    <input type="hidden" name="components_data" id="components_data">
+    <button type="submit">Salvar Checklist</button>
+</form>
+
+<style>
+    .component-block { border: 1px solid #ccc; border-radius: 5px; padding: 15px; margin-bottom: 20px; position: relative; }
+    .component-block.category { background-color: #e9ecef; border-color: #ced4da; }
+    .component-block.simple-question { background-color: #f8f9fa; }
+    .sub-item-block { background-color: #fff; border-left: 3px solid #05B540; padding: 10px; margin-top: 10px; position: relative; }
+    .remove-btn { position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; }
+    .btn-secondary { background-color: #6c757d; }
+    .btn-small { background-color: #007bff; padding: 5px 10px; font-size: 0.8em; margin-top: 10px; color: white; border: none; border-radius: 3px; cursor: pointer; }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 10px; border-radius: 5px; }
+    .checkbox-item { display: flex; align-items: center; }
+    .drag-handle { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); cursor: grab; color: #999; font-size: 1.5em; line-height: 1; }
+    .component-block, .sub-item-block { padding-left: 40px; }
+    .sortable-ghost { opacity: 0.4; background: #c8ebfb; }
+</style>
+
+<script>
+    const existingChecklist = {{ checklist_json|safe if checklist_json else 'null' }};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('checklist-form');
+        const container = document.getElementById('components-container');
+        const addQuestionBtn = document.getElementById('add-simple-question-btn');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+
+        new Sortable(container, {
+            animation: 150,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost'
+        });
+
+        function createRemoveButton() {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'remove-btn';
+            btn.innerText = 'X';
+            btn.onclick = function() { this.closest('.component-block, .sub-item-block').remove(); };
+            return btn;
+        }
+
+        function createResponseTypeCheckboxes() {
+            let html = '<div class="form-group"><label>Tipos de Resposta Necessários:</label><div class="checkbox-group">';
+            {% for r_type in response_types %}
+            html += `
+                <div class="checkbox-item">
+                    <input type="checkbox" id="rt_{{ r_type.ID }}_${Math.random()}" data-field="response_type_id" value="{{ r_type.ID }}">
+                    <label for="rt_{{ r_type.ID }}_${Math.random()}">{{ r_type.Nome }}</label>
+                </div>
+            `;
+            {% endfor %}
+            html += '</div></div>';
+            return html;
+        }
+
+        const instructionInputHTML = `
+            <div class="form-group">
+                <label>Instrução / Procedimento (Opcional):</label>
+                <textarea data-field="instruction" class="form-control" rows="2" placeholder="Ex: Verifique se a trava de segurança está engatada."></textarea>
+            </div>
+        `;
+
+        function addSimpleQuestionBlock() {
+            const block = document.createElement('div');
+            block.className = 'component-block simple-question';
+            block.setAttribute('data-type', 'PERGUNTA_SIMPLES');
+            block.innerHTML = `
+                <div class="drag-handle">☰</div>
+                <p><strong>Pergunta Simples</strong></p>
+                <div class="form-group"><label>Texto da Pergunta:</label><input type="text" data-field="text" class="form-control" required></div>
+                ${instructionInputHTML}
+                ${createResponseTypeCheckboxes()}
+            `;
+            block.appendChild(createRemoveButton());
+            container.appendChild(block);
+        }
+
+        function addCategoryBlock() {
+            const block = document.createElement('div');
+            block.className = 'component-block category';
+            block.setAttribute('data-type', 'CATEGORIA');
+            block.innerHTML = `
+                <div class="drag-handle">☰</div>
+                <p><strong>Categoria</strong></p>
+                <div class="form-group"><label>Nome da Categoria:</label><input type="text" data-field="text" class="form-control" required></div>
+                ${instructionInputHTML}
+                <div class="sub-items-container"></div>
+                <button type="button" class="btn-small add-sub-item-btn">Adicionar Item</button>
+            `;
+            block.appendChild(createRemoveButton());
+            container.appendChild(block);
+            
+            const subItemsContainer = block.querySelector('.sub-items-container');
+            
+            new Sortable(subItemsContainer, {
+                animation: 150,
+                handle: '.drag-handle',
+                ghostClass: 'sortable-ghost'
+            });
+
+            block.querySelector('.add-sub-item-btn').addEventListener('click', function() {
+                const subItem = document.createElement('div');
+                subItem.className = 'sub-item-block';
+                subItem.setAttribute('data-type', 'ITEM_VERIFICACAO');
+                subItem.innerHTML = `
+                    <div class="drag-handle">☰</div>
+                    <div class="form-group"><label>Texto do Item:</label><input type="text" data-field="text" class="form-control" required></div>
+                    ${instructionInputHTML}
+                    ${createResponseTypeCheckboxes()}
+                `;
+                subItem.appendChild(createRemoveButton());
+                subItemsContainer.appendChild(subItem);
+            });
+        }
+        
+        addQuestionBtn.addEventListener('click', addSimpleQuestionBlock);
+        addCategoryBtn.addEventListener('click', addCategoryBlock);
+
+        function populateForm() {
+            if (!existingChecklist || !existingChecklist.components) return;
+
+            existingChecklist.components.forEach(comp => {
+                let block;
+                if (comp.data.TipoComponente === 'PERGUNTA_SIMPLES') {
+                    addQuestionBtn.click();
+                    block = container.lastElementChild;
+                } else if (comp.data.TipoComponente === 'CATEGORIA') {
+                    addCategoryBtn.click();
+                    block = container.lastElementChild;
+                }
+
+                if (block) {
+                    block.querySelector('[data-field="text"]').value = comp.data.TextoComponente;
+                    block.querySelector('[data-field="instruction"]').value = comp.data.Instrucao || '';
+
+                    if (comp.response_types) {
+                        comp.response_types.forEach(rt => {
+                            const checkbox = block.querySelector(`input[value="${rt.details.ID}"]`);
+                            if (checkbox) checkbox.checked = true;
+                        });
+                    }
+                    
+                    if (comp.children) {
+                        const addSubItemBtn = block.querySelector('.add-sub-item-btn');
+                        comp.children.forEach(subItem => {
+                            addSubItemBtn.click();
+                            const subBlock = block.querySelector('.sub-items-container').lastElementChild;
+                            subBlock.querySelector('[data-field="text"]').value = subItem.data.TextoComponente;
+                            subBlock.querySelector('[data-field="instruction"]').value = subItem.data.Instrucao || '';
+                            
+                            if (subItem.response_types) {
+                                subItem.response_types.forEach(rt => {
+                                    const checkbox = subBlock.querySelector(`input[value="${rt.details.ID}"]`);
+                                    if (checkbox) checkbox.checked = true;
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        }
+        
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const componentsData = [];
+            container.querySelectorAll('.component-block').forEach(block => {
+                const checkedResponseTypeIds = [];
+                block.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => {
+                    checkedResponseTypeIds.push(cb.value);
+                });
+                const component = {
+                    type: block.dataset.type,
+                    text: block.querySelector('[data-field="text"]').value,
+                    instruction: block.querySelector('[data-field="instruction"]').value,
+                    response_type_ids: checkedResponseTypeIds
+                };
+                if (component.type === 'CATEGORIA') {
+                    component.sub_items = [];
+                    block.querySelectorAll('.sub-item-block').forEach(subBlock => {
+                         const checkedSubItemResponseTypeIds = [];
+                         subBlock.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => {
+                            checkedSubItemResponseTypeIds.push(cb.value);
+                        });
+                        const subItem = {
+                            text: subBlock.querySelector('[data-field="text"]').value,
+                            instruction: subBlock.querySelector('[data-field="instruction"]').value,
+                            response_type_ids: checkedSubItemResponseTypeIds
+                        };
+                        component.sub_items.push(subItem);
+                    });
+                }
+                componentsData.push(component);
+            });
+            document.getElementById('components_data').value = JSON.stringify(componentsData);
+            form.submit();
+        });
+        
+        populateForm();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}Criar Novo Setor{% endblock %}
+
+{% block content %}
+    <form class="form-card" method="POST">
+        <h2>Criar Novo Setor</h2>
+        <p>Digite o nome do novo setor que estará disponível no sistema.</p>
+        
+        <div class="form-group">
+            <label for="sector_name">Nome do Setor</label>
+            <input type="text" id="sector_name" name="sector_name" required>
+        </div>
+
+        <button type="submit">Salvar Setor</button>
+        <a href="{{ url_for('dashboard') }}" class="btn-back" style="background-color: #6c757d;">Cancelar</a>
+    </form>
+{% endblock %}

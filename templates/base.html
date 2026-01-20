@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <title>{% block title %}Reunidas Check{% endblock %}</title>
+</head>
+<body>
+    
+    {% block header %}
+    <header>
+        <div class="header-logo-title">
+            <div class="logo-placeholder">
+                <img src="{{ url_for('static', filename='images/reunidas.png') }}" alt="Logo Reunidas" style="width: 100%;">
+            </div>
+            <h1>Reunidas Check</h1>
+        </div>
+        <nav>
+            {% if session.user_id %}
+                <a href="{{ url_for('dashboard') }}">Dashboard</a>
+                <span>| Olá, {{ session.username }} ({{ session.role }}) |</span>
+                <a href="{{ url_for('logout') }}">Sair</a>
+            {% endif %}
+        </nav>
+    </header>
+    {% endblock %}
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
