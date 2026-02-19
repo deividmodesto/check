@@ -255,29 +255,34 @@ def create_flexible_checklist(title, sector_id, components_data):
         conn.close()
 
 def update_flexible_checklist(checklist_id, title, sector_id, components_data):
-    """Atualiza um checklist: apaga os componentes antigos e insere os novos."""
+    """
+    Atualiza um checklist. AGORA PROTEGIDO: Impede alteração estrutural se houver respostas.
+    """
     conn = get_connection()
-    if not conn: return False
+    if not conn: return False, "Erro de conexão com o banco."
     cursor = conn.cursor()
     try:
-        # Inicia a transação para garantir que tudo seja feito com sucesso
+        # 1. VERIFICAÇÃO DE SEGURANÇA (NOVO)
+        # Verifica se já existem submissões para este checklist
+        cursor.execute("SELECT COUNT(ID) FROM Submissoes WHERE ChecklistID = ?", checklist_id)
+        count = cursor.fetchone()[0]
+        
+        if count > 0:
+            # Se já tem respostas, NÃO permite mexer nas perguntas, pois isso apagaria o histórico.
+            # Permite apenas atualizar Título e Setor, se necessário, mas bloqueia a recriação dos componentes.
+            # Para simplificar e garantir segurança total, bloqueamos a edição completa e avisamos o usuário.
+            return False, f"PROTEÇÃO DE DADOS: Este checklist já foi respondido {count} vezes. Alterar as perguntas agora apagaria as respostas antigas. Por favor, crie um NOVO checklist."
+
+        # Se não tem respostas, prossegue com a lógica original (apagando e recriando)
         conn.autocommit = False
 
-        # 1. Atualiza o título e setor do checklist principal
+        # Atualiza o título e setor
         cursor.execute("UPDATE Checklists SET Titulo = ?, SetorID = ? WHERE ID = ?", title, sector_id, checklist_id)
         
-        # 2. ANTES de apagar os componentes, apaga as respostas associadas a eles.
-        #    Isso evita o erro de 'REFERENCE constraint' que tivemos antes.
-        cursor.execute("""
-            DELETE FROM Respostas 
-            WHERE ComponenteID IN (SELECT ID FROM ComponentesChecklist WHERE ChecklistID = ?)
-        """, checklist_id)
-
-        # 3. Agora, apaga TODOS os componentes antigos (perguntas/categorias) do checklist.
-        #    É este passo que impede a duplicação.
+        # Limpa componentes antigos (seguro pois não há respostas vinculadas)
         cursor.execute("DELETE FROM ComponentesChecklist WHERE ChecklistID = ?", checklist_id)
 
-        # 4. Reinsere os componentes com a nova estrutura, como se fosse um novo checklist
+        # Reinsere os componentes
         for order, comp in enumerate(components_data):
             sql_component = """
             SET NOCOUNT ON;
@@ -303,15 +308,14 @@ def update_flexible_checklist(checklist_id, title, sector_id, components_data):
                             cursor.execute("INSERT INTO Componente_TiposResposta (ComponenteID, TipoRespostaID) VALUES (?, ?)", sub_item_id, rt_id)
         
         conn.commit()
-        return True
+        return True, "Checklist atualizado com sucesso!"
     except Exception as e:
         print(f"Erro ao atualizar checklist: {e}")
         conn.rollback()
-        return False
+        return False, f"Erro interno ao atualizar: {str(e)}"
     finally:
         conn.autocommit = True
         conn.close()
-
 
 def get_response_type_by_id(type_id):
     """Busca um único tipo de resposta e suas opções associadas."""

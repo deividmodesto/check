@@ -228,20 +228,36 @@ def create_flexible_checklist():
 @role_required(['COORDENADOR', 'GESTOR'])
 def edit_checklist(checklist_id):
     if request.method == 'POST':
-        title, sector_id, components_json = request.form.get('title'), request.form.get('sector_id'), request.form.get('components_data')
+        title = request.form.get('title')
+        sector_id = request.form.get('sector_id')
+        components_json = request.form.get('components_data')
+        
         if not all([title, sector_id, components_json]):
             flash("Todos os campos são obrigatórios.", "danger")
         else:
-            if db.update_flexible_checklist(checklist_id, title, sector_id, json.loads(components_json)):
-                flash("Checklist atualizado com sucesso!", "success")
+            # ALTERAÇÃO AQUI: Agora desempacotamos o resultado e a mensagem
+            success, message = db.update_flexible_checklist(checklist_id, title, sector_id, json.loads(components_json))
+            
+            if success:
+                flash(message, "success")
                 return redirect(url_for('manage_checklists'))
-            else: flash("Erro ao atualizar o checklist.", "danger")
+            else:
+                # Se falhar (ex: porque já tem respostas), mostra a mensagem de erro explicativa
+                flash(message, "danger")
+                
+        # Se deu erro, redireciona de volta para a edição (ou poderia recarregar o form)
         return redirect(url_for('edit_checklist', checklist_id=checklist_id))
+
     checklist_data = db.get_checklist_for_editing(checklist_id)
     if not checklist_data:
         flash("Checklist não encontrado.", "danger")
         return redirect(url_for('manage_checklists'))
-    return render_template('checklist_form.html', checklist=convert_checklist_to_dict(checklist_data), checklist_json=json.dumps(convert_checklist_to_dict(checklist_data)), sectors=db.get_sectors_for_coordinator(session['user_id']), response_types=db.get_all_response_types())
+        
+    return render_template('checklist_form.html', 
+                         checklist=convert_checklist_to_dict(checklist_data), 
+                         checklist_json=json.dumps(convert_checklist_to_dict(checklist_data)), 
+                         sectors=db.get_sectors_for_coordinator(session['user_id']), 
+                         response_types=db.get_all_response_types())
 
 @app.route('/manage_checklists')
 @login_required
