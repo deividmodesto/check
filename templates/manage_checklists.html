@@ -12,7 +12,7 @@
             {% for chk in checklists %}
                 <li>
                     <div class="item-info">
-                        <strong>{{ chk.Titulo }}</strong>
+                        <strong>#{{ chk.ID }} - {{ chk.Titulo }}</strong>
                         <span>Setor: {{ chk.NomeSetor }}</span>
                     </div>
                     <div class="item-actions">
@@ -31,20 +31,9 @@
 </div>
 
 <style>
-    .item-actions {
-        display: flex;
-        align-items: center;
-    }
-    .btn-secondary, .btn-danger {
-        padding: 8px 15px;
-        text-decoration: none;
-        color: white;
-        border-radius: 5px;
-        margin-left: 10px;
-        border: none; /* Adicionado para o botão */
-        cursor: pointer; /* Adicionado para o botão */
-        font-size: 14px; /* Adicionado para o botão */
-    }
+    /* Mantenha o estilo original aqui */
+    .item-actions { display: flex; align-items: center; }
+    .btn-secondary, .btn-danger { padding: 8px 15px; text-decoration: none; color: white; border-radius: 5px; margin-left: 10px; border: none; cursor: pointer; font-size: 14px; }
     .btn-secondary { background-color: #6c757d; }
     .btn-danger { background-color: #dc3545; }
 </style>
