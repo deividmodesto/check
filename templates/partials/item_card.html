@@ -15,7 +15,7 @@
                         {% endfor %}
                     </div>
                 {% else %}
-                    <span class="answer-value {% if answer.is_conforme == False %}non-compliant{% elif answer.is_conforme == True %}compliant{% endif %}">{{ answer.valor }}</span>
+                    <span class="answer-value json-formatter {% if answer.is_conforme == False %}non-compliant{% elif answer.is_conforme == True %}compliant{% endif %}" data-raw="{{ answer.valor }}">{{ answer.valor }}</span>
                 {% endif %}
             </div>
         {% endfor %}
