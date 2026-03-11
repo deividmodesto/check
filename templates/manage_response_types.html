@@ -1,82 +1,105 @@
 {% extends 'base.html' %}
-{% block title %}Gerenciar Tipos de Resposta{% endblock %}
+
+{% block title %}Gerir Tipos de Resposta{% endblock %}
+
 {% block content %}
-<div class="list-card">
-    <h2>Gerenciar Tipos de Resposta</h2>
-    <p>Adicione, edite ou remova os conjuntos de respostas que podem ser usados nos checklists.</p>
-    
-    <div class="item-list">
-        {% for r_type in response_types %}
-        <li>
-            <span>{{ r_type.Nome }}</span>
-            <div class="item-actions">
-                <a href="{{ url_for('edit_response_type', type_id=r_type.ID) }}" class="btn-secondary">Editar</a>
-                <form action="{{ url_for('delete_response_type', type_id=r_type.ID) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja apagar este tipo de resposta?');">
-                    <button type="submit" class="btn-danger">Apagar</button>
-                </form>
+<div style="margin-bottom: 30px;">
+    <h2 class="page-title"><i class="fa-solid fa-list-ul" style="margin-right: 10px;"></i> Gerir Tipos de Resposta</h2>
+    <p style="color: var(--cor-texto-mutado);">Adicione, edite ou remova os conjuntos de respostas usados nos checklists.</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 350px; gap: 30px; align-items: start;">
+    <div class="card">
+        <h3 style="border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-bottom: 20px;">Conjuntos Existentes</h3>
+        
+        {% if response_types %}
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for r_type in response_types %}
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; border: 1px solid var(--cor-borda); border-radius: 8px; background: #fafafa;">
+                        <div>
+                            <span style="font-weight: 600; color: var(--cor-texto); display: block;">{{ r_type.Nome }}</span>
+                            <span style="font-size: 0.8rem; color: var(--cor-texto-mutado);">
+                                Tipo: {% if r_type.TipoInput == 'radio' %}Múltipla Escolha{% elif r_type.TipoInput == 'text' %}Texto Curto{% elif r_type.TipoInput == 'textarea' %}Texto Longo{% elif r_type.TipoInput == 'date' %}Data{% elif r_type.TipoInput == 'file' %}Anexo/Foto{% else %}Padrão{% endif %}
+                            </span>
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="{{ url_for('edit_response_type', type_id=r_type.ID) }}" class="btn-primary" style="background-color: #3498db; padding: 6px 12px; font-size: 0.85rem;">
+                                <i class="fa-solid fa-pen"></i> Editar
+                            </a>
+                            <form action="{{ url_for('delete_response_type', type_id=r_type.ID) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Tem a certeza que deseja apagar este tipo de resposta?');">
+                                <button type="submit" class="btn-primary" style="background-color: #e74c3c; padding: 6px 12px; font-size: 0.85rem;">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endfor %}
             </div>
-        </li>
         {% else %}
-        <p>Nenhum tipo de resposta personalizado foi criado ainda.</p>
-        {% endfor %}
+            <p style="color: var(--cor-texto-mutado); text-align: center; padding: 20px;">Nenhum tipo de resposta personalizado foi criado ainda.</p>
+        {% endif %}
+    </div>
+
+    <div class="card" style="background: #f9fbfb; border-color: #d1d8dd;">
+        <h3 style="border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-bottom: 20px; color: var(--cor-principal);"><i class="fa-solid fa-plus-circle"></i> Criar Novo Conjunto</h3>
+        
+        <form method="POST" action="{{ url_for('create_response_type') }}">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="name">Nome (Ex: Temperatura, Assinatura)</label>
+                <input type="text" name="name" class="form-control" placeholder="Digite o nome..." required>
+            </div>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="tipo_input">Formato da Resposta</label>
+                <select name="tipo_input" id="tipo_input" class="form-control" onchange="toggleOptions()">
+                    <option value="radio">Botões de Múltipla Escolha (Ex: Sim/Não)</option>
+                    <option value="text">Texto Curto / Número (Linha Única)</option>
+                    <option value="textarea">Texto Longo (Caixa de Observação)</option>
+                    <option value="date">Campo de Data</option>
+                    <option value="file">Anexo de Imagem / Foto</option>
+                </select>
+            </div>
+            
+            <div class="form-group" id="options-group" style="margin-bottom: 20px;">
+                <label>Opções de Resposta (mínimo 2)</label>
+                <div id="options-container" style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" name="options[]" class="form-control" placeholder="Opção 1 (Ex: Sim)">
+                    <input type="text" name="options[]" class="form-control" placeholder="Opção 2 (Ex: Não)">
+                </div>
+                <button type="button" id="add-option-btn" class="btn-primary" style="background-color: #95a5a6; padding: 8px 12px; font-size: 0.85rem; margin-top: 10px; width: 100%; justify-content: center;">
+                    <i class="fa-solid fa-plus"></i> Adicionar outra opção
+                </button>
+            </div>
+            
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center;"><i class="fa-solid fa-check"></i> Guardar Novo Tipo</button>
+        </form>
     </div>
 </div>
 
-<form class="form-card" method="POST" action="{{ url_for('create_response_type') }}">
-    <h3>Criar Novo Tipo de Resposta</h3>
-    <div class="form-group">
-        <label for="name">Nome do Conjunto (Ex: "Conformidade", "Avaliação Simples")</label>
-        <input type="text" name="name" required>
-    </div>
-    <div class="form-group">
-        <label>Opções de Resposta (mínimo 2)</label>
-        <div id="options-container">
-            <input type="text" name="options[]" placeholder="Opção 1" required>
-            <input type="text" name="options[]" placeholder="Opção 2" required>
-        </div>
-        <button type="button" id="add-option-btn" class="btn-secondary" style="margin-top: 10px;">Adicionar outra opção</button>
-    </div>
-    <button type="submit">Salvar Novo Tipo</button>
-</form>
-
 <script>
+function toggleOptions() {
+    var tipo = document.getElementById('tipo_input').value;
+    var optionsGroup = document.getElementById('options-group');
+    
+    // Só mostra as opções para o utilizador escrever (Sim/Não) se o tipo for "radio"
+    if (tipo === 'radio') {
+        optionsGroup.style.display = 'block';
+    } else {
+        optionsGroup.style.display = 'none';
+    }
+}
+
+// Executa a função assim que a página carrega para evitar erros visuais
+document.addEventListener('DOMContentLoaded', toggleOptions);
+
 document.getElementById('add-option-btn').addEventListener('click', function() {
     const container = document.getElementById('options-container');
     const input = document.createElement('input');
     input.type = 'text';
     input.name = 'options[]';
+    input.className = 'form-control';
     input.placeholder = `Opção ${container.children.length + 1}`;
-    input.style.marginTop = '10px';
     container.appendChild(input);
 });
 </script>
-
-<style>
-    /* Estilos para os botões de ação e alinhamento */
-    .item-list li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 10px 0;
-        border-bottom: 1px solid #eee;
-    }
-    .item-list li:last-child {
-        border-bottom: none;
-    }
-    .item-actions {
-        display: flex;
-        gap: 10px;
-    }
-    .btn-danger, .btn-secondary {
-        padding: 8px 15px;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        text-decoration: none;
-        font-size: 14px;
-    }
-    .btn-danger { background-color: #dc3545; }
-    .btn-secondary { background-color: #6c757d; }
-</style>
 {% endblock %}

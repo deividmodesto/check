@@ -1,42 +1,123 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#012E23">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192x192.png') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Reunidas Check{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
-    <title>{% block title %}Reunidas Check{% endblock %}</title>
 </head>
-<body>
+<body class="{% if not session.user_id %}login-page{% endif %}">
     
-    {% block header %}
-    <header>
-        <div class="header-logo-title">
-            <div class="logo-placeholder">
-                <img src="{{ url_for('static', filename='images/reunidas.png') }}" alt="Logo Reunidas" style="width: 100%;">
+    {% if session.user_id %}
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <img src="{{ url_for('static', filename='images/reunidas1.png') }}" alt="Logo Reunidas">
+                <h2>Reunidas</h2>
             </div>
-            <h1>Reunidas Check</h1>
-        </div>
-        <nav>
-            {% if session.user_id %}
-                <a href="{{ url_for('dashboard') }}">Dashboard</a>
-                <span>| Olá, {{ session.username }} ({{ session.role }}) |</span>
-                <a href="{{ url_for('logout') }}">Sair</a>
-            {% endif %}
-        </nav>
-    </header>
-    {% endblock %}
+            
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint == 'dashboard' %}active{% endif %}">
+                        <i class="fa-solid fa-house"></i> Dashboard
+                    </a>
+                </li>
+                {% if session.role in ['COORDENADOR', 'GESTOR'] %}
+                <li>
+                    <a href="{{ url_for('manage_checklists') }}">
+                        <i class="fa-solid fa-list-check"></i> Checklists
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('view_responses') }}">
+                        <i class="fa-solid fa-inbox"></i> Respostas
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('reports') }}">
+                        <i class="fa-solid fa-chart-pie"></i> Relatórios
+                    </a>
+                </li>
+                <li>
+                    <a href="{{ url_for('manage_users') }}">
+                        <i class="fa-solid fa-users"></i> Equipe
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
 
-    <main class="container">
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" style="color: #e74c3c; text-decoration: none; display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Sair do Sistema
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-header">
+                <div class="page-context">
+                    <span style="color: var(--cor-texto-mutado); font-weight: 500;"><i class="fa-regular fa-calendar-check"></i> Sistema de Auditoria</span>
+                </div>
+                <div class="user-profile">
+                    <i class="fa-regular fa-circle-user" style="font-size: 1.5rem; color: var(--cor-secundaria);"></i>
+                    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+                        <span>{{ session.username }}</span>
+                        <span class="user-role">{{ session.role }}</span>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                {% if category == 'success' %}<i class="fa-solid fa-circle-check"></i>
+                                {% elif category == 'danger' %}<i class="fa-solid fa-triangle-exclamation"></i>
+                                {% else %}<i class="fa-solid fa-circle-info"></i>{% endif %}
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+    {% else %}
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
+                <div style="position: absolute; top: 20px; width: 100%; display: flex; justify-content: center;">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ category }}">{{ message }}</div>
                 {% endfor %}
+                </div>
             {% endif %}
         {% endwith %}
+        {% block login_content %}{% endblock %}
+    {% endif %}
 
-        {% block content %}{% endblock %}
-    </main>
+<script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('PWA: ServiceWorker registado com sucesso. Scope:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('PWA: Falha ao registar o ServiceWorker:', error);
+                    });
+            });
+        }
+    </script>
+</body>
 </body>
 </html>

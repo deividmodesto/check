@@ -1,30 +1,37 @@
 {% extends 'base.html' %}
 
-{% block title %}Criar Novo Usuário{% endblock %}
+{% block title %}Criar Novo Utilizador{% endblock %}
 
 {% block content %}
-    <form class="form-card" method="POST">
-        <h2>Criar Novo Usuário</h2>
-        <p>Você pode criar um novo Coordenador (que será independente) ou um novo Colaborador (que será associado a você).</p>
-        
-        <div class="form-group">
-            <label for="username">Nome de Usuário</label>
-            <input type="text" id="username" name="username" required>
+<div style="margin-bottom: 30px;">
+    <h2 class="page-title"><i class="fa-solid fa-user-plus" style="margin-right: 10px;"></i> Criar Novo Utilizador</h2>
+    <p style="color: var(--cor-texto-mutado);">Adicione um novo Coordenador ou Colaborador ao sistema.</p>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <form method="POST">
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="username"><i class="fa-regular fa-user"></i> Nome de Utilizador</label>
+            <input type="text" id="username" name="username" class="form-control" required>
         </div>
         
-        <div class="form-group">
-            <label for="password">Senha Provisória</label>
-            <input type="password" id="password" name="password" required>
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="password"><i class="fa-solid fa-lock"></i> Senha Provisória</label>
+            <input type="password" id="password" name="password" class="form-control" required>
         </div>
 
-        <div class="form-group">
-            <label for="role">Papel do Novo Usuário:</label>
-            <select id="role" name="role">
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label for="role"><i class="fa-solid fa-id-badge"></i> Papel do Novo Utilizador</label>
+            <select id="role" name="role" class="form-control">
                 <option value="COLABORADOR">Colaborador (Associado a mim)</option>
                 <option value="COORDENADOR">Coordenador</option>
             </select>
         </div>
 
-        <button type="submit">Salvar Usuário</button>
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-check"></i> Guardar Utilizador</button>
+            <a href="{{ url_for('manage_users') }}" class="btn-primary" style="background-color: #95a5a6; text-decoration: none;"><i class="fa-solid fa-xmark"></i> Cancelar</a>
+        </div>
     </form>
+</div>
 {% endblock %}

@@ -1,40 +1,73 @@
 {% extends 'base.html' %}
-
 {% block title %}Respostas Recebidas{% endblock %}
 
 {% block content %}
-    <div class="list-card">
-        <h2>Respostas Recebidas</h2>
-        <p>Abaixo estão as versões mais recentes dos checklists preenchidos pelos colaboradores dos seus setores.</p>
+    <div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h2 class="page-title" style="margin-bottom: 5px;"><i class="fa-solid fa-inbox" style="margin-right: 10px;"></i> Respostas Recebidas</h2>
+            <p style="color: var(--cor-texto-mutado);">Analise os checklists preenchidos pela sua equipa.</p>
+        </div>
+        
+        <form method="GET" action="{{ url_for('view_responses') }}" style="display: flex; gap: 10px; width: 100%; max-width: 400px;">
+            <input type="text" name="search" class="form-control" placeholder="Buscar por ID, Título ou Colaborador..." value="{{ search }}">
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-magnifying-glass"></i></button>
+            {% if search %}
+                <a href="{{ url_for('view_responses') }}" class="btn-primary" style="background-color: #95a5a6;" title="Limpar Busca"><i class="fa-solid fa-xmark"></i></a>
+            {% endif %}
+        </form>
+    </div>
 
-        <div class="checklist-grid">
+    <div class="card">
+        <div style="display: flex; flex-direction: column; gap: 15px;">
             {% if submissions %}
                 {% for sub in submissions %}
-                    <div class="checklist-item-card">
-                        <div class="item-info">
-                            <span class="item-title">Relatório #{{ sub.ID }} - {{ sub.Titulo }}</span>
-                            <span class="item-meta">
-                                Respondido por: {{ sub.NomeUsuario }} em {{ sub.DataSubmissao.strftime('%d/%m/%Y às %H:%M') }}
-                            </span>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid var(--cor-borda); border-radius: 8px; transition: var(--transicao);">
+                        <div>
+                            <h4 style="margin-bottom: 8px; color: var(--cor-principal); font-size: 1.1rem;">Relatório #{{ sub.ID }} - {{ sub.Titulo }}</h4>
+                            <div style="display: flex; gap: 15px; font-size: 0.85rem; color: var(--cor-texto-mutado);">
+                                <span><i class="fa-regular fa-user"></i> {{ sub.NomeUsuario }}</span>
+                                <span><i class="fa-regular fa-calendar"></i> {{ sub.DataSubmissao.strftime('%d/%m/%Y às %H:%M') }}</span>
+                            </div>
                         </div>
-                        <div class="item-actions">
-                            <a href="{{ url_for('submission_details', submission_id=sub.ID) }}" class="btn-action btn-view">Ver Detalhes</a>
-                            <form action="{{ url_for('edit_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Isso criará uma nova versão editável e arquivará a original. Deseja continuar?');">
-                                <button type="submit" class="btn-action btn-edit">Editar</button>
+                        <div style="display: flex; gap: 10px;">
+                            <a href="{{ url_for('submission_details', submission_id=sub.ID) }}" class="btn-primary" style="background-color: #3498db; padding: 8px 15px; font-size: 0.9rem;">
+                                <i class="fa-regular fa-eye"></i> Detalhes
+                            </a>
+                            <form action="{{ url_for('edit_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Isso criará uma nova versão editável e arquivará a original. Deseja continuar?');" style="margin: 0;">
+                                <button type="submit" class="btn-primary" style="background-color: #f39c12; padding: 8px 15px; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-pencil"></i> Editar
+                                </button>
                             </form>
-                            <form action="{{ url_for('delete_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar esta resposta permanentemente?');">
-                                <button type="submit" class="btn-action btn-delete">Apagar</button>
+                            <form action="{{ url_for('delete_submission', submission_id=sub.ID) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja apagar esta resposta permanentemente?');" style="margin: 0;">
+                                <button type="submit" class="btn-primary" style="background-color: #e74c3c; padding: 8px 15px; font-size: 0.9rem;">
+                                    <i class="fa-solid fa-trash"></i> Apagar
+                                </button>
                             </form>
                         </div>
                     </div>
                 {% endfor %}
             {% else %}
-                <div class="empty-state">
-                    <p>Nenhuma resposta de checklist foi encontrada.</p>
+                <div style="padding: 40px; text-align: center; background: #f9fbfb; border-radius: 8px; border: 1px dashed var(--cor-borda);">
+                    <i class="fa-solid fa-inbox" style="font-size: 3rem; color: #e1e8ed; margin-bottom: 15px;"></i>
+                    <p style="color: var(--cor-texto-mutado); font-size: 1.1rem;">Nenhuma resposta encontrada.</p>
                 </div>
             {% endif %}
         </div>
-    </div>
 
-    
+        {% if total_pages > 1 %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--cor-borda);">
+            {% if page > 1 %}
+                <a href="{{ url_for('view_responses', page=page-1, search=search) }}" class="btn-primary" style="background-color: #95a5a6; padding: 8px 15px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+            <span style="font-weight: 600; color: var(--cor-principal); font-size: 0.95rem;">Página {{ page }} de {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for('view_responses', page=page+1, search=search) }}" class="btn-primary" style="background-color: #95a5a6; padding: 8px 15px; font-size: 0.9rem;">
+                    Próxima <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
 {% endblock %}

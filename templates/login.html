@@ -2,29 +2,26 @@
 
 {% block title %}Login - Reunidas Check{% endblock %}
 
-{# Este bloco vazio remove o cabeçalho padrão da página de login #}
-{% block header %}{% endblock %}
-
-{% block content %}
-<div class="login-wrapper">
-    <div class="login-card">
-        <div class="login-logo">
-            <img src="{{ url_for('static', filename='images/reunidas1.png') }}" alt="Logo Reunidas Check">
-        </div>
+{% block login_content %}
+<div class="login-wrapper" style="width: 100%; height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--cor-principal) 0%, #024a38 100%);">
+    <div class="card" style="width: 100%; max-width: 400px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: none;">
+        <img src="{{ url_for('static', filename='images/reunidas1.png') }}" alt="Logo Reunidas" style="max-width: 160px; margin-bottom: 20px;">
         
-        <h2>Reunidas Check</h2>
-        <p class="subtitle">Acesse sua conta para continuar</p>
+        <h2 style="color: var(--cor-principal); margin-bottom: 5px; font-size: 1.5rem;">Acesso ao Sistema</h2>
+        <p style="color: var(--cor-texto-mutado); font-size: 0.9rem; margin-bottom: 30px;">Insira suas credenciais para continuar</p>
 
-        <form class="login-form" method="POST" action="{{ url_for('login') }}">
-            <div class="form-group">
-                <label for="username">Usuário</label>
-                <input type="text" id="username" name="username" required>
+        <form method="POST" action="{{ url_for('login') }}" style="text-align: left;">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="username"><i class="fa-regular fa-user" style="margin-right: 5px;"></i> Usuário</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Digite seu usuário" required>
             </div>
-            <div class="form-group">
-                <label for="password">Senha</label>
-                <input type="password" id="password" name="password" required>
+            <div class="form-group" style="margin-bottom: 30px;">
+                <label for="password"><i class="fa-solid fa-lock" style="margin-right: 5px;"></i> Senha</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Digite sua senha" required>
             </div>
-            <button type="submit" class="btn-login">Entrar</button>
+            <button type="submit" class="btn-primary" style="width: 100%; justify-content: center; padding: 14px; font-size: 1.1rem;">
+                Entrar <i class="fa-solid fa-arrow-right-to-bracket"></i>
+            </button>
         </form>
     </div>
 </div>

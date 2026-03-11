@@ -3,38 +3,66 @@
 {% block title %}Gerenciar Checklists{% endblock %}
 
 {% block content %}
-<div class="list-card">
-    <h2>Gerenciar Checklists</h2>
-    <p>A partir daqui, você pode editar ou apagar os templates de checklist existentes.</p>
-
-    {% if checklists %}
-        <ul class="item-list">
-            {% for chk in checklists %}
-                <li>
-                    <div class="item-info">
-                        <strong>#{{ chk.ID }} - {{ chk.Titulo }}</strong>
-                        <span>Setor: {{ chk.NomeSetor }}</span>
-                    </div>
-                    <div class="item-actions">
-                        <a href="{{ url_for('edit_checklist', checklist_id=chk.ID) }}" class="btn-secondary">Editar</a>
-                        
-                        <form action="{{ url_for('delete_checklist', checklist_id=chk.ID) }}" method="POST" style="display: inline;" onsubmit="return confirm('Tem certeza que deseja apagar o checklist \'{{ chk.Titulo }}\'? Esta ação não pode ser desfeita.');">
-                            <button type="submit" class="btn-danger">Apagar</button>
-                        </form>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Nenhum checklist foi criado nos seus setores ainda.</p>
-    {% endif %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+        <h2 class="page-title" style="margin-bottom: 5px;"><i class="fa-solid fa-list-check" style="margin-right: 10px;"></i> Gerenciar Checklists</h2>
+        <p style="color: var(--cor-texto-mutado);">Edite ou apague os templates de checklist existentes.</p>
+    </div>
+    <a href="{{ url_for('create_flexible_checklist') }}" class="btn-primary">
+        <i class="fa-solid fa-plus"></i> Novo Checklist
+    </a>
 </div>
 
-<style>
-    /* Mantenha o estilo original aqui */
-    .item-actions { display: flex; align-items: center; }
-    .btn-secondary, .btn-danger { padding: 8px 15px; text-decoration: none; color: white; border-radius: 5px; margin-left: 10px; border: none; cursor: pointer; font-size: 14px; }
-    .btn-secondary { background-color: #6c757d; }
-    .btn-danger { background-color: #dc3545; }
-</style>
+<div class="card">
+    {% if checklists %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for chk in checklists %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; border: 1px solid var(--cor-borda); border-radius: 8px; transition: var(--transicao);">
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <div style="background: rgba(5, 181, 64, 0.1); color: var(--cor-secundaria); padding: 15px; border-radius: 8px;">
+                            <i class="fa-solid fa-clipboard-check" style="font-size: 1.5rem;"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 5px; font-size: 1.1rem; color: var(--cor-texto);">#{{ chk.ID }} - {{ chk.Titulo }}</h4>
+                            <span style="font-size: 0.85rem; color: var(--cor-texto-mutado); background: #f4f7f6; padding: 3px 8px; border-radius: 4px;">
+                                <i class="fa-solid fa-building"></i> Setor: {{ chk.NomeSetor }}
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('edit_checklist', checklist_id=chk.ID) }}" class="btn-primary" style="background-color: #3498db; padding: 8px 15px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                        </a>
+                        <form action="{{ url_for('delete_checklist', checklist_id=chk.ID) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Tem certeza que deseja apagar o checklist \'{{ chk.Titulo }}\'? Esta ação não pode ser desfeita.');">
+                            <button type="submit" class="btn-primary" style="background-color: #e74c3c; padding: 8px 15px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-trash-can"></i> Apagar
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 40px; text-align: center; background: #f9fbfb; border-radius: 8px; border: 1px dashed var(--cor-borda);">
+            <i class="fa-regular fa-folder-open" style="font-size: 3rem; color: #e1e8ed; margin-bottom: 15px;"></i>
+            <p style="color: var(--cor-texto-mutado); font-size: 1.1rem;">Nenhum checklist foi criado nos seus setores ainda.</p>
+            <a href="{{ url_for('create_flexible_checklist') }}" class="btn-primary" style="margin-top: 15px;">Criar o primeiro</a>
+        </div>
+    {% endif %}
+    {% if total_pages > 1 %}
+        <div style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--cor-borda);">
+            {% if page > 1 %}
+                <a href="{{ url_for(request.endpoint, page=page-1) }}" class="btn-primary" style="background-color: #95a5a6; padding: 8px 15px; font-size: 0.9rem;">
+                    <i class="fa-solid fa-chevron-left"></i> Anterior
+                </a>
+            {% endif %}
+            <span style="font-weight: 600; color: var(--cor-principal); font-size: 0.95rem;">Página {{ page }} de {{ total_pages }}</span>
+            {% if page < total_pages %}
+                <a href="{{ url_for(request.endpoint, page=page+1) }}" class="btn-primary" style="background-color: #95a5a6; padding: 8px 15px; font-size: 0.9rem;">
+                    Próxima <i class="fa-solid fa-chevron-right"></i>
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+</div>
 {% endblock %}

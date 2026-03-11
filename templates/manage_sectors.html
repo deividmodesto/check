@@ -1,57 +1,44 @@
 {% extends 'base.html' %}
 
-{% block title %}Gerenciar Meus Setores{% endblock %}
+{% block title %}Gerir Meus Setores{% endblock %}
 
 {% block content %}
-    <form class="form-card" method="POST">
-        <h2>Gerenciar Meus Setores</h2>
-        <p>Marque os setores aos quais você pertence. Os checklists desses setores ficarão disponíveis para seus colaboradores.</p>
-        <hr>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+        <h2 class="page-title" style="margin-bottom: 5px;"><i class="fa-solid fa-building-user" style="margin-right: 10px;"></i> Gerir Meus Setores</h2>
+        <p style="color: var(--cor-texto-mutado);">Selecione os setores aos quais pertence para disponibilizar os respetivos checklists.</p>
+    </div>
+    <a href="{{ url_for('create_sector') }}" class="btn-primary" style="background-color: #3498db;">
+        <i class="fa-solid fa-plus"></i> Novo Setor
+    </a>
+</div>
 
-        <div class="form-group">
-            <label>Setores Disponíveis:</label>
-            <div class="checkbox-group">
+<div class="card" style="max-width: 800px;">
+    <form method="POST">
+        <div class="form-group" style="margin-bottom: 25px;">
+            <label style="font-size: 1.1rem; border-bottom: 1px solid var(--cor-borda); padding-bottom: 10px; margin-bottom: 15px;">Setores Disponíveis no Sistema</label>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; background: #f9fbfb; padding: 20px; border-radius: 8px; border: 1px solid var(--cor-borda); max-height: 400px; overflow-y: auto;">
                 {% for sector in all_sectors %}
-                    <div class="checkbox-item">
-                        <input 
-                            type="checkbox" 
-                            id="sector_{{ sector.ID }}" 
-                            name="sector_ids" 
-                            value="{{ sector.ID }}"
-                            {% if sector.ID in my_sector_ids %}checked{% endif %}>
-                        <label for="sector_{{ sector.ID }}">{{ sector.Nome }}</label>
-                    </div>
+                    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 12px; background: #fff; border: 1px solid var(--cor-borda); border-radius: 6px; transition: var(--transicao);" class="sector-checkbox-label">
+                        <input type="checkbox" name="sector_ids" value="{{ sector.ID }}" {% if sector.ID in my_sector_ids %}checked{% endif %} style="width: 18px; height: 18px; accent-color: var(--cor-secundaria);">
+                        <span style="font-weight: 500; color: var(--cor-texto);">{{ sector.Nome }}</span>
+                    </label>
                 {% endfor %}
             </div>
         </div>
 
-        <button type="submit">Salvar Alterações</button>
-        <a href="{{ url_for('dashboard') }}" class="btn-back">Cancelar</a>
+        <div style="display: flex; gap: 15px;">
+            <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Alterações</button>
+            <a href="{{ url_for('dashboard') }}" class="btn-primary" style="background-color: #95a5a6; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Voltar ao Dashboard</a>
+        </div>
     </form>
-    
-    <style>
-        .checkbox-group {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 5px;
-            padding: 15px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        .checkbox-item {
-            display: block;
-            margin-bottom: 10px;
-        }
-        .checkbox-item input {
-            margin-right: 10px;
-        }
-        .btn-back {
-            background-color: #6c757d;
-            color: white;
-            padding: 10px 15px;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-left: 10px;
-        }
-    </style>
+</div>
+
+<style>
+    .sector-checkbox-label:hover { 
+        border-color: var(--cor-secundaria) !important; 
+        box-shadow: 0 2px 8px rgba(5, 181, 64, 0.1); 
+    }
+</style>
 {% endblock %}

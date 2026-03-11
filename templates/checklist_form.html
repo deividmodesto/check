@@ -2,49 +2,66 @@
 {% block title %}{% if checklist %}Editar Checklist{% else %}Criar Novo Checklist{% endif %}{% endblock %}
 
 {% block content %}
-<form class="form-card" method="POST" id="checklist-form"
+<div style="margin-bottom: 30px;">
+    <h2 class="page-title"><i class="fa-solid fa-file-signature" style="margin-right: 10px;"></i> {% if checklist %}Editar Checklist{% else %}Criar Novo Checklist{% endif %}</h2>
+    <p style="color: var(--cor-texto-mutado);">Monte a estrutura do seu checklist adicionando perguntas, categorias ou tabelas de apontamento.</p>
+</div>
+
+<form method="POST" id="checklist-form" class="card" style="max-width: 900px;"
     action="{% if checklist %}{{ url_for('edit_checklist', checklist_id=checklist.data.ID) }}{% else %}{{ url_for('create_flexible_checklist') }}{% endif %}">
     
-    <h2>{% if checklist %}Editar Checklist{% else %}Criar Novo Checklist{% endif %}</h2>
-    
-    <div class="form-group">
-        <label for="title">Título do Checklist</label>
-        <input type="text" id="title" name="title" value="{{ checklist.data.Titulo if checklist and checklist.data.Titulo else '' }}" required>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid var(--cor-borda); padding-bottom: 20px;">
+        <div class="form-group">
+            <label for="title">Título do Documento</label>
+            <input type="text" id="title" name="title" class="form-control" value="{{ checklist.data.Titulo if checklist and checklist.data.Titulo else '' }}" required placeholder="Ex: Diário de Bordo - Secador 1">
+        </div>
+        <div class="form-group">
+            <label for="sector_id">Associar ao Setor:</label>
+            <select id="sector_id" name="sector_id" class="form-control" required>
+                <option value="">-- Selecione --</option>
+                {% for sector in sectors %}
+                <option value="{{ sector.ID }}" {% if checklist and checklist.data.SetorID == sector.ID %}selected{% endif %}>{{ sector.Nome }}</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="sector_id">Associar ao Setor:</label>
-        <select id="sector_id" name="sector_id" required>
-            <option value="">-- Selecione um setor --</option>
-            {% for sector in sectors %}
-            <option value="{{ sector.ID }}" {% if checklist and checklist.data.SetorID == sector.ID %}selected{% endif %}>
-                {{ sector.Nome }}
-            </option>
-            {% endfor %}
-        </select>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h4 style="color: var(--cor-principal);"><i class="fa-solid fa-layer-group"></i> Estrutura do Documento</h4>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" id="add-simple-question-btn" class="btn-primary" style="background-color: #3498db; padding: 8px 15px; font-size: 0.85rem;"><i class="fa-solid fa-plus"></i> Pergunta</button>
+            <button type="button" id="add-category-btn" class="btn-primary" style="background-color: var(--cor-secundaria); padding: 8px 15px; font-size: 0.85rem;"><i class="fa-solid fa-folder-plus"></i> Categoria</button>
+            <button type="button" id="add-table-btn" class="btn-primary" style="background-color: #9b59b6; padding: 8px 15px; font-size: 0.85rem;"><i class="fa-solid fa-table"></i> Tabela</button>
+        </div>
     </div>
-    <hr>
-    <h4>Componentes do Checklist (Arraste ☰ para reordenar)</h4>
-    <div id="components-container"></div>
-    <button type="button" id="add-simple-question-btn" class="btn-secondary">Adicionar Pergunta Simples</button>
-    <button type="button" id="add-category-btn" class="btn-secondary">Adicionar Categoria</button>
-    <hr>
+
+    <div id="components-container" style="min-height: 100px; background: #f9fbfb; border: 2px dashed var(--cor-borda); border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+        </div>
+
     <input type="hidden" name="components_data" id="components_data">
-    <button type="submit">Salvar Checklist</button>
+    
+    <div style="display: flex; gap: 15px;">
+        <button type="submit" class="btn-primary"><i class="fa-solid fa-floppy-disk"></i> Guardar Documento</button>
+        <a href="{{ url_for('manage_checklists') }}" class="btn-primary" style="background-color: #95a5a6; text-decoration: none;"><i class="fa-solid fa-xmark"></i> Cancelar</a>
+    </div>
 </form>
 
 <style>
-    .component-block { border: 1px solid #ccc; border-radius: 5px; padding: 15px; margin-bottom: 20px; position: relative; }
-    .component-block.category { background-color: #e9ecef; border-color: #ced4da; }
-    .component-block.simple-question { background-color: #f8f9fa; }
-    .sub-item-block { background-color: #fff; border-left: 3px solid #05B540; padding: 10px; margin-top: 10px; position: relative; }
-    .remove-btn { position: absolute; top: 10px; right: 10px; background-color: #dc3545; color: white; border: none; border-radius: 50%; width: 25px; height: 25px; cursor: pointer; font-weight: bold; }
-    .btn-secondary { background-color: #6c757d; }
-    .btn-small { background-color: #007bff; padding: 5px 10px; font-size: 0.8em; margin-top: 10px; color: white; border: none; border-radius: 3px; cursor: pointer; }
-    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #fff; padding: 10px; border-radius: 5px; }
-    .checkbox-item { display: flex; align-items: center; }
-    .drag-handle { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); cursor: grab; color: #999; font-size: 1.5em; line-height: 1; }
-    .component-block, .sub-item-block { padding-left: 40px; }
-    .sortable-ghost { opacity: 0.4; background: #c8ebfb; }
+    .component-block { background: #fff; border: 1px solid var(--cor-borda); border-radius: 8px; padding: 20px 20px 20px 45px; margin-bottom: 20px; position: relative; box-shadow: var(--sombra-suave); transition: var(--transicao); }
+    .component-block:hover { border-color: #bdc3c7; }
+    .component-block.category { border-top: 4px solid var(--cor-secundaria); }
+    .component-block.simple-question { border-top: 4px solid #3498db; }
+    .component-block.tabela-apontamento { border-top: 4px solid #9b59b6; }
+    
+    .sub-item-block { background-color: #fafafa; border: 1px solid #e1e8ed; border-left: 3px solid var(--cor-secundaria); padding: 15px 15px 15px 40px; margin-top: 15px; position: relative; border-radius: 6px; }
+    .remove-btn { position: absolute; top: 15px; right: 15px; background-color: transparent; color: var(--cor-perigo); border: none; font-size: 1.2rem; cursor: pointer; transition: var(--transicao); }
+    .remove-btn:hover { transform: scale(1.1); }
+    .drag-handle { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); cursor: grab; color: #bdc3c7; font-size: 1.2rem; }
+    .drag-handle:active { cursor: grabbing; }
+    .sortable-ghost { opacity: 0.5; background: #e8f5e9; border: 2px dashed var(--cor-secundaria); }
+    .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; background: #f4f7f6; padding: 15px; border-radius: 6px; margin-top: 10px; }
+    .checkbox-item { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+    .checkbox-item input { width: 16px; height: 16px; accent-color: var(--cor-secundaria); }
 </style>
 
 <script>
@@ -55,24 +72,21 @@
         const container = document.getElementById('components-container');
         const addQuestionBtn = document.getElementById('add-simple-question-btn');
         const addCategoryBtn = document.getElementById('add-category-btn');
+        const addTableBtn = document.getElementById('add-table-btn');
 
-        new Sortable(container, {
-            animation: 150,
-            handle: '.drag-handle',
-            ghostClass: 'sortable-ghost'
-        });
+        new Sortable(container, { animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost' });
 
         function createRemoveButton() {
             const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'remove-btn';
-            btn.innerText = 'X';
+            btn.type = 'button'; btn.className = 'remove-btn';
+            btn.innerHTML = '<i class="fa-solid fa-trash"></i>';
             btn.onclick = function() { this.closest('.component-block, .sub-item-block').remove(); };
             return btn;
         }
 
-        function createResponseTypeCheckboxes() {
-            let html = '<div class="form-group"><label>Tipos de Resposta Necessários:</label><div class="checkbox-group">';
+        function createResponseTypeCheckboxes(isTable = false) {
+            let labelText = isTable ? "Selecione as Colunas (Ex: Temperatura, Umidade):" : "Tipos de Resposta Exigidos:";
+            let html = `<div class="form-group" style="margin-top: 15px;"><label style="font-size: 0.9rem; color: var(--cor-texto-mutado);">${labelText}</label><div class="checkbox-group">`;
             {% for r_type in response_types %}
             html += `
                 <div class="checkbox-item">
@@ -86,9 +100,8 @@
         }
 
         const instructionInputHTML = `
-            <div class="form-group">
-                <label>Instrução / Procedimento (Opcional):</label>
-                <textarea data-field="instruction" class="form-control" rows="2" placeholder="Ex: Verifique se a trava de segurança está engatada."></textarea>
+            <div class="form-group" style="margin-top: 10px;">
+                <textarea data-field="instruction" class="form-control" rows="1" placeholder="Instrução/Procedimento (Opcional)"></textarea>
             </div>
         `;
 
@@ -97,9 +110,9 @@
             block.className = 'component-block simple-question';
             block.setAttribute('data-type', 'PERGUNTA_SIMPLES');
             block.innerHTML = `
-                <div class="drag-handle">☰</div>
-                <p><strong>Pergunta Simples</strong></p>
-                <div class="form-group"><label>Texto da Pergunta:</label><input type="text" data-field="text" class="form-control" required></div>
+                <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                <p style="font-size: 0.8rem; text-transform: uppercase; color: #3498db; font-weight: bold; margin-bottom: 10px;">Pergunta Simples</p>
+                <div class="form-group"><input type="text" data-field="text" class="form-control" placeholder="Escreva a pergunta aqui..." required></div>
                 ${instructionInputHTML}
                 ${createResponseTypeCheckboxes()}
             `;
@@ -112,31 +125,26 @@
             block.className = 'component-block category';
             block.setAttribute('data-type', 'CATEGORIA');
             block.innerHTML = `
-                <div class="drag-handle">☰</div>
-                <p><strong>Categoria</strong></p>
-                <div class="form-group"><label>Nome da Categoria:</label><input type="text" data-field="text" class="form-control" required></div>
+                <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                <p style="font-size: 0.8rem; text-transform: uppercase; color: var(--cor-secundaria); font-weight: bold; margin-bottom: 10px;">Categoria</p>
+                <div class="form-group"><input type="text" data-field="text" class="form-control" placeholder="Nome da Categoria (Ex: Equipamentos de Proteção)" required></div>
                 ${instructionInputHTML}
                 <div class="sub-items-container"></div>
-                <button type="button" class="btn-small add-sub-item-btn">Adicionar Item</button>
+                <button type="button" class="btn-primary add-sub-item-btn" style="background-color: #95a5a6; padding: 6px 12px; font-size: 0.8rem; margin-top: 15px;"><i class="fa-solid fa-plus"></i> Adicionar Item</button>
             `;
             block.appendChild(createRemoveButton());
             container.appendChild(block);
             
             const subItemsContainer = block.querySelector('.sub-items-container');
-            
-            new Sortable(subItemsContainer, {
-                animation: 150,
-                handle: '.drag-handle',
-                ghostClass: 'sortable-ghost'
-            });
+            new Sortable(subItemsContainer, { animation: 150, handle: '.drag-handle', ghostClass: 'sortable-ghost' });
 
             block.querySelector('.add-sub-item-btn').addEventListener('click', function() {
                 const subItem = document.createElement('div');
                 subItem.className = 'sub-item-block';
                 subItem.setAttribute('data-type', 'ITEM_VERIFICACAO');
                 subItem.innerHTML = `
-                    <div class="drag-handle">☰</div>
-                    <div class="form-group"><label>Texto do Item:</label><input type="text" data-field="text" class="form-control" required></div>
+                    <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                    <div class="form-group"><input type="text" data-field="text" class="form-control" placeholder="Item de verificação..." required></div>
                     ${instructionInputHTML}
                     ${createResponseTypeCheckboxes()}
                 `;
@@ -144,42 +152,53 @@
                 subItemsContainer.appendChild(subItem);
             });
         }
+
+        function addTableBlock() {
+            const block = document.createElement('div');
+            block.className = 'component-block tabela-apontamento';
+            block.setAttribute('data-type', 'TABELA');
+            block.innerHTML = `
+                <div class="drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                <p style="font-size: 0.8rem; text-transform: uppercase; color: #9b59b6; font-weight: bold; margin-bottom: 10px;"><i class="fa-solid fa-table"></i> Grelha / Tabela de Apontamento</p>
+                <div class="form-group"><input type="text" data-field="text" class="form-control" placeholder="Título da Tabela (Ex: Dados do Secador)" required></div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label style="font-size: 0.85rem; color: var(--cor-texto-mutado);">Horários/Linhas (Separe por vírgula. Ex: 07:00, 07:15, 07:30):</label>
+                    <textarea data-field="instruction" class="form-control" rows="2" placeholder="07:00, 07:15, 07:30..." required></textarea>
+                </div>
+                ${createResponseTypeCheckboxes(true)}
+            `;
+            block.appendChild(createRemoveButton());
+            container.appendChild(block);
+        }
         
         addQuestionBtn.addEventListener('click', addSimpleQuestionBlock);
         addCategoryBtn.addEventListener('click', addCategoryBlock);
+        addTableBtn.addEventListener('click', addTableBlock);
 
         function populateForm() {
             if (!existingChecklist || !existingChecklist.components) return;
-
             existingChecklist.components.forEach(comp => {
                 let block;
-                if (comp.data.TipoComponente === 'PERGUNTA_SIMPLES') {
-                    addQuestionBtn.click();
-                    block = container.lastElementChild;
-                } else if (comp.data.TipoComponente === 'CATEGORIA') {
-                    addCategoryBtn.click();
-                    block = container.lastElementChild;
-                }
+                if (comp.data.TipoComponente === 'PERGUNTA_SIMPLES') { addQuestionBtn.click(); block = container.lastElementChild; } 
+                else if (comp.data.TipoComponente === 'CATEGORIA') { addCategoryBtn.click(); block = container.lastElementChild; }
+                else if (comp.data.TipoComponente === 'TABELA') { addTableBtn.click(); block = container.lastElementChild; }
 
                 if (block) {
                     block.querySelector('[data-field="text"]').value = comp.data.TextoComponente;
                     block.querySelector('[data-field="instruction"]').value = comp.data.Instrucao || '';
-
                     if (comp.response_types) {
                         comp.response_types.forEach(rt => {
                             const checkbox = block.querySelector(`input[value="${rt.details.ID}"]`);
                             if (checkbox) checkbox.checked = true;
                         });
                     }
-                    
-                    if (comp.children) {
+                    if (comp.children && comp.data.TipoComponente === 'CATEGORIA') {
                         const addSubItemBtn = block.querySelector('.add-sub-item-btn');
                         comp.children.forEach(subItem => {
                             addSubItemBtn.click();
                             const subBlock = block.querySelector('.sub-items-container').lastElementChild;
                             subBlock.querySelector('[data-field="text"]').value = subItem.data.TextoComponente;
                             subBlock.querySelector('[data-field="instruction"]').value = subItem.data.Instrucao || '';
-                            
                             if (subItem.response_types) {
                                 subItem.response_types.forEach(rt => {
                                     const checkbox = subBlock.querySelector(`input[value="${rt.details.ID}"]`);
@@ -197,27 +216,17 @@
             const componentsData = [];
             container.querySelectorAll('.component-block').forEach(block => {
                 const checkedResponseTypeIds = [];
-                block.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => {
-                    checkedResponseTypeIds.push(cb.value);
-                });
+                block.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => { checkedResponseTypeIds.push(cb.value); });
                 const component = {
-                    type: block.dataset.type,
-                    text: block.querySelector('[data-field="text"]').value,
-                    instruction: block.querySelector('[data-field="instruction"]').value,
-                    response_type_ids: checkedResponseTypeIds
+                    type: block.dataset.type, text: block.querySelector('[data-field="text"]').value,
+                    instruction: block.querySelector('[data-field="instruction"]').value, response_type_ids: checkedResponseTypeIds
                 };
                 if (component.type === 'CATEGORIA') {
                     component.sub_items = [];
                     block.querySelectorAll('.sub-item-block').forEach(subBlock => {
                          const checkedSubItemResponseTypeIds = [];
-                         subBlock.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => {
-                            checkedSubItemResponseTypeIds.push(cb.value);
-                        });
-                        const subItem = {
-                            text: subBlock.querySelector('[data-field="text"]').value,
-                            instruction: subBlock.querySelector('[data-field="instruction"]').value,
-                            response_type_ids: checkedSubItemResponseTypeIds
-                        };
+                         subBlock.querySelectorAll('[data-field="response_type_id"]:checked').forEach(cb => { checkedSubItemResponseTypeIds.push(cb.value); });
+                        const subItem = { text: subBlock.querySelector('[data-field="text"]').value, instruction: subBlock.querySelector('[data-field="instruction"]').value, response_type_ids: checkedSubItemResponseTypeIds };
                         component.sub_items.push(subItem);
                     });
                 }

@@ -1,51 +1,50 @@
 {% extends 'base.html' %}
 
-{% block title %}Gerenciar Usuários{% endblock %}
+{% block title %}Gerir Equipe{% endblock %}
 
 {% block content %}
-<div class="list-card">
-    <h2>Gerenciar Usuários</h2>
-    <p>Visualize e gerencie os usuários colaboradores associados a você.</p>
-
-    {% if users %}
-        <ul class="item-list">
-            {% for user in users %}
-                <li>
-                    <div class="item-info">
-                        <strong>{{ user.NomeUsuario }}</strong>
-                        <span>Papel: {{ user.Papel }}</span>
-                    </div>
-                    <div class="item-actions">
-                        <a href="{{ url_for('edit_user', user_id=user.ID) }}" class="btn-secondary">Editar</a>
-                        
-                        <form action="{{ url_for('reset_password', user_id=user.ID) }}" method="POST" onsubmit="return confirm('Tem certeza que deseja gerar uma NOVA senha para este usuário?');">
-                            <button type="submit" class="btn-warning">Resetar Senha</button>
-                        </form>
-                    </div>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>Você não possui colaboradores associados para gerenciar.</p>
-    {% endif %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+        <h2 class="page-title" style="margin-bottom: 5px;"><i class="fa-solid fa-users-gear" style="margin-right: 10px;"></i> Gerir Equipe</h2>
+        <p style="color: var(--cor-texto-mutado);">Visualize e gira os utilizadores associados a si.</p>
+    </div>
+    <a href="{{ url_for('create_user') }}" class="btn-primary">
+        <i class="fa-solid fa-user-plus"></i> Novo Utilizador
+    </a>
 </div>
 
-<style>
-    .item-actions {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .btn-secondary, .btn-warning {
-        padding: 8px 15px;
-        text-decoration: none;
-        color: white;
-        border-radius: 5px;
-        border: none;
-        cursor: pointer;
-        font-size: 14px;
-    }
-    .btn-secondary { background-color: #6c757d; }
-    .btn-warning { background-color: var(--cor-acao); }
-</style>
+<div class="card">
+    {% if users %}
+        <div style="display: flex; flex-direction: column; gap: 15px;">
+            {% for user in users %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border: 1px solid var(--cor-borda); border-radius: 8px; transition: var(--transicao);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="background: #f4f7f6; color: var(--cor-principal); padding: 12px; border-radius: 50%; width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                            <i class="fa-solid fa-user"></i>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 5px; color: var(--cor-texto);">{{ user.NomeUsuario }}</h4>
+                            <span style="font-size: 0.85rem; background: #e8f5e9; color: var(--cor-secundaria); padding: 3px 8px; border-radius: 4px;"><i class="fa-solid fa-id-badge"></i> {{ user.Papel }}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <a href="{{ url_for('edit_user', user_id=user.ID) }}" class="btn-primary" style="background-color: #3498db; padding: 8px 15px; font-size: 0.9rem;">
+                            <i class="fa-solid fa-pen"></i> Editar
+                        </a>
+                        <form action="{{ url_for('reset_password', user_id=user.ID) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Tem a certeza que deseja gerar uma NOVA senha para este utilizador?');">
+                            <button type="submit" class="btn-primary" style="background-color: var(--cor-acao); padding: 8px 15px; font-size: 0.9rem;">
+                                <i class="fa-solid fa-key"></i> Reset Senha
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div style="padding: 40px; text-align: center; background: #f9fbfb; border-radius: 8px; border: 1px dashed var(--cor-borda);">
+            <i class="fa-solid fa-users-slash" style="font-size: 3rem; color: #e1e8ed; margin-bottom: 15px;"></i>
+            <p style="color: var(--cor-texto-mutado); font-size: 1.1rem;">Não possui colaboradores associados para gerir.</p>
+        </div>
+    {% endif %}
+</div>
 {% endblock %}
