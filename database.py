@@ -152,22 +152,29 @@ def create_sector(sector_name):
 
 
 # --- Funções de Gerenciamento de Tipos de Resposta ---
-def create_response_type(name, options):
+def create_response_type(name, options, tipo_input='radio'):
     conn = get_connection()
     if not conn: return False
     cursor = conn.cursor()
     try:
-        cursor.execute("SET NOCOUNT ON; INSERT INTO TiposResposta (Nome, TipoInput) VALUES (?, 'radio'); SELECT SCOPE_IDENTITY();", name)
+        # Agora inserimos o tipo_input que vem do formulário (radio ou text)
+        cursor.execute("SET NOCOUNT ON; INSERT INTO TiposResposta (Nome, TipoInput) VALUES (?, ?); SELECT SCOPE_IDENTITY();", name, tipo_input)
         response_type_id = cursor.fetchone()[0]
-        for option in options:
-            if option:
-                cursor.execute("INSERT INTO OpcoesResposta (TipoRespostaID, TextoOpcao) VALUES (?, ?)", response_type_id, option)
+        
+        # Só insere as opções (Sim, Não) se for múltipla escolha
+        if tipo_input == 'radio':
+            for option in options:
+                if option:
+                    cursor.execute("INSERT INTO OpcoesResposta (TipoRespostaID, TextoOpcao) VALUES (?, ?)", response_type_id, option)
+                    
         conn.commit()
         return True
     except Exception as e:
+        print(f"Erro ao criar tipo de resposta: {e}")
         conn.rollback()
         return False
-    finally: conn.close()
+    finally:
+        conn.close()
 
 def get_all_response_types():
     conn = get_connection()
@@ -405,13 +412,14 @@ def get_flexible_checklist_for_filling(checklist_id):
     conn.close()
     return checklist_data
 
-def save_flexible_checklist_response(checklist_id, user_id, answers, participants):
+def save_flexible_checklist_response(checklist_id, user_id, answers, participants, status='Ativa'):
     conn = get_connection()
     if not conn: return False
     cursor = conn.cursor()
     try:
-        sql_batch = "SET NOCOUNT ON; INSERT INTO Submissoes (ChecklistID, UsuarioID, NomeTrabalhadorAuditado, NomeResponsavelArea) VALUES (?, ?, ?, ?); SELECT SCOPE_IDENTITY();"
-        cursor.execute(sql_batch, checklist_id, user_id, participants['worker_name'], participants['area_manager_name'])
+        # INSERIMOS AGORA A COLUNA 'Status' NA QUERY
+        sql_batch = "SET NOCOUNT ON; INSERT INTO Submissoes (ChecklistID, UsuarioID, NomeTrabalhadorAuditado, NomeResponsavelArea, Status) VALUES (?, ?, ?, ?, ?); SELECT SCOPE_IDENTITY();"
+        cursor.execute(sql_batch, checklist_id, user_id, participants['worker_name'], participants['area_manager_name'], status)
         submission_id = cursor.fetchone()[0]
         for component_id, data in answers.items():
             responses = data.get('responses', {})
@@ -476,16 +484,16 @@ def delete_checklist(checklist_id):
     finally: conn.close()
 
 def get_submissions_for_collaborator(collaborator_id):
-    """Busca o histórico de submissões ATIVAS para um colaborador específico."""
+    """Busca o histórico de submissões ATIVAS e RASCUNHOS para um colaborador específico."""
     conn = get_connection()
     if not conn: return []
     cursor = conn.cursor()
     query = """
-        SELECT sub.ID, chk.Titulo, sub.DataSubmissao
+        SELECT sub.ID, chk.Titulo, sub.DataSubmissao, sub.Status
         FROM Submissoes sub
         JOIN Checklists chk ON sub.ChecklistID = chk.ID
         WHERE sub.UsuarioID = ?
-        AND sub.Status = 'Ativa' -- CORREÇÃO AQUI: Filtra apenas as versões ativas
+        AND sub.Status IN ('Ativa', 'Rascunho')
         ORDER BY sub.DataSubmissao DESC
     """
     cursor.execute(query, collaborator_id)
@@ -765,24 +773,17 @@ def get_submission_for_resubmit(submission_id):
     conn.close()
     return checklist_structure, existing_answers
 
-def update_submission_answers(submission_id, user_id, answers, participants):
-    """
-    Atualiza as respostas de uma submissão existente. Apaga as respostas antigas e salva as novas.
-    """
+def update_submission_answers(submission_id, user_id, answers, participants, status='Ativa'):
     conn = get_connection()
     if not conn: return False
     cursor = conn.cursor()
     try:
-        # Apaga todas as respostas e fotos antigas desta submissão para evitar duplicatas
-        # A exclusão em cascata cuidará da tabela FotosResposta
         cursor.execute("DELETE FROM Respostas WHERE SubmissaoID = ?", submission_id)
 
-        # Atualiza o autor para quem fez a última modificação
-        cursor.execute("UPDATE Submissoes SET UsuarioID = ?, NomeTrabalhadorAuditado = ?, NomeResponsavelArea = ? WHERE ID = ?", 
-                       user_id, participants['worker_name'], participants['area_manager_name'], submission_id)
+        # ATUALIZAMOS AGORA TAMBÉM O 'Status' NA QUERY
+        cursor.execute("UPDATE Submissoes SET UsuarioID = ?, NomeTrabalhadorAuditado = ?, NomeResponsavelArea = ?, Status = ? WHERE ID = ?", 
+                       user_id, participants['worker_name'], participants['area_manager_name'], status, submission_id)
 
-
-        # Reinsere as novas respostas (lógica de save_flexible_checklist_response)
         for component_id, data in answers.items():
             responses = data.get('responses', {})
             observation = data.get('observation')

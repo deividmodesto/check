@@ -141,9 +141,20 @@ def dashboard():
                                collaborators=db.get_collaborators_for_coordinator(user_id), 
                                sectors=db.get_sectors_for_coordinator(user_id))
     elif role == 'COLABORADOR':
+        # NOVA LÓGICA DE PAGINAÇÃO
+        page = request.args.get('page', 1, type=int)
+        per_page = 5 # Mostra apenas 5 submissões/rascunhos por página
+        
+        all_submitted = db.get_submissions_for_collaborator(user_id)
+        total_pages = (len(all_submitted) + per_page - 1) // per_page
+        start = (page - 1) * per_page
+        end = start + per_page
+        submitted_paginated = all_submitted[start:end]
+        
         return render_template('colaborador_dashboard.html', 
                                checklists=db.get_checklists_for_collaborator(user_id), 
-                               submitted_checklists=db.get_submissions_for_collaborator(user_id))
+                               submitted_checklists=submitted_paginated,
+                               page=page, total_pages=total_pages)
     else:
         flash("Papel de usuário não reconhecido.", "danger")
         return redirect(url_for('login'))
@@ -263,7 +274,15 @@ def edit_checklist(checklist_id):
 @login_required
 @role_required(['COORDENADOR', 'GESTOR'])
 def manage_checklists():
-    return render_template('manage_checklists.html', checklists=db.get_checklists_for_coordinator(session['user_id']))
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    all_checklists = db.get_checklists_for_coordinator(session['user_id'])
+    total_pages = (len(all_checklists) + per_page - 1) // per_page if all_checklists else 1
+    start = (page - 1) * per_page
+    checklists_paginated = all_checklists[start:start + per_page]
+    
+    return render_template('manage_checklists.html', checklists=checklists_paginated, page=page, total_pages=total_pages)
 
 @app.route('/delete_checklist/<int:checklist_id>', methods=['POST'])
 @login_required
@@ -277,7 +296,21 @@ def delete_checklist(checklist_id):
 @login_required
 @role_required(['COORDENADOR', 'GESTOR'])
 def view_responses():
-    return render_template('view_responses.html', submissions=db.get_submissions_for_coordinator(session['user_id']))
+    page = request.args.get('page', 1, type=int)
+    search = request.args.get('search', '').lower()
+    per_page = 10
+    
+    all_submissions = db.get_submissions_for_coordinator(session['user_id'])
+    
+    # Lógica do Filtro de Pesquisa Rápida
+    if search:
+        all_submissions = [s for s in all_submissions if search in str(s.ID) or search in (s.Titulo or '').lower() or search in (s.NomeUsuario or '').lower()]
+        
+    total_pages = (len(all_submissions) + per_page - 1) // per_page if all_submissions else 1
+    start = (page - 1) * per_page
+    submissions_paginated = all_submissions[start:start + per_page]
+    
+    return render_template('view_responses.html', submissions=submissions_paginated, page=page, total_pages=total_pages, search=search)
 
 @app.route('/delete_submission/<int:submission_id>', methods=['POST'])
 @login_required
@@ -324,17 +357,44 @@ def submission_details(submission_id):
 @login_required
 @role_required(['COORDENADOR', 'GESTOR'])
 def reports():
-    coordinator_id, report_data, filters, report_scores = session['user_id'], [], {}, {}
+    # Inicializa o report_data como None para não mostrar a tabela vazia ao abrir a página
+    coordinator_id, report_data, filters, report_scores = session['user_id'], None, {}, {}
+    
     if request.method == 'POST':
         filters = {k: request.form.get(k) for k in ['checklist_id', 'user_id', 'start_date', 'end_date', 'question', 'answer']}
         report_data_db = db.get_filtered_submissions(coordinator_id, **{k: v or None for k, v in filters.items()})
+        
+        report_data = [] # Inicia como lista vazia se for POST
+        
         if report_data_db:
             report_data = [dict(row) for row in report_data_db]
             for row in report_data:
                 row['photo_list'] = row['CaminhosFotos'].split(',') if row.get('CaminhosFotos') else []
-            for sub_id, group in groupby(report_data, key=lambda x: x['SubmissaoID']):
-                report_scores[sub_id] = calculate_audit_score(list(group))
-    return render_template('reports.html', checklists=db.get_checklists_for_coordinator(coordinator_id), users=db.get_manageable_users(coordinator_id), questions=db.get_all_distinct_questions(coordinator_id), report_data=report_data, filters=filters, report_scores=report_scores)
+                
+                # TRUQUE: Adaptar os dados da base de dados para a função de Score funcionar
+                row['valor'] = row.get('Resposta')
+                if row['valor'] in ['Conforme', 'Bom']:
+                    row['is_conforme'] = True
+                elif row['valor'] in ['Não Conforme', 'Ruim']:
+                    row['is_conforme'] = False
+                else:
+                    row['is_conforme'] = None
+            
+            # Ordenar primeiro os dados por SubmissaoID para o groupby funcionar corretamente
+            report_data_sorted = sorted(report_data, key=lambda x: x['SubmissaoID'])
+            
+            for sub_id, group in groupby(report_data_sorted, key=lambda x: x['SubmissaoID']):
+                score = calculate_audit_score(list(group))
+                if score is not None: # Apenas guarda se o score for válido
+                    report_scores[sub_id] = score
+                    
+    return render_template('reports.html', 
+                           checklists=db.get_checklists_for_coordinator(coordinator_id), 
+                           users=db.get_manageable_users(coordinator_id), 
+                           questions=db.get_all_distinct_questions(coordinator_id), 
+                           report_data=report_data, 
+                           filters=filters, 
+                           report_scores=report_scores)
 
 @app.route('/manage_sectors', methods=['GET', 'POST'])
 @login_required
@@ -366,18 +426,32 @@ def create_sector():
 @login_required
 @role_required(['COORDENADOR', 'GESTOR'])
 def manage_response_types():
-    return render_template('manage_response_types.html', response_types=db.get_all_response_types())
-
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    all_types = db.get_all_response_types()
+    total_pages = (len(all_types) + per_page - 1) // per_page if all_types else 1
+    start = (page - 1) * per_page
+    types_paginated = all_types[start:start + per_page]
+    
+    return render_template('manage_response_types.html', response_types=types_paginated, page=page, total_pages=total_pages)
 @app.route('/create_response_type', methods=['POST'])
 @login_required
 @role_required(['COORDENADOR', 'GESTOR'])
 def create_response_type():
     name = request.form.get('name')
+    tipo_input = request.form.get('tipo_input', 'radio') # Captura se é texto ou radio
     options = [opt.strip() for opt in request.form.getlist('options[]') if opt.strip()]
-    if not name or len(options) < 2: flash("O nome e pelo menos duas opções são obrigatórios.", "danger")
+    
+    if not name: 
+        flash("O nome é obrigatório.", "danger")
+    elif tipo_input == 'radio' and len(options) < 2: 
+        flash("Para opções de múltipla escolha, informe pelo menos duas opções.", "danger")
     else:
-        if db.create_response_type(name, options): flash("Novo tipo de resposta criado com sucesso!", "success")
-        else: flash("Erro ao criar o tipo de resposta. O nome já pode existir.", "danger")
+        if db.create_response_type(name, options, tipo_input): 
+            flash("Novo tipo de resposta criado com sucesso!", "success")
+        else: 
+            flash("Erro ao criar o tipo de resposta. O nome já pode existir.", "danger")
     return redirect(url_for('manage_response_types'))
 
 @app.route('/delete_response_type/<int:type_id>', methods=['POST'])
@@ -414,6 +488,9 @@ def edit_response_type(type_id):
 @role_required('COLABORADOR')
 def fill_checklist(checklist_id):
     if request.method == 'POST':
+        action = request.form.get('action', 'submit') # Lê o botão clicado
+        status = 'Rascunho' if action == 'draft' else 'Ativa'
+        
         participants = {'worker_name': request.form.get('worker_name'), 'area_manager_name': request.form.get('area_manager_name')}
         answers = {}
         def ensure_comp_struct(comp_id):
@@ -439,15 +516,18 @@ def fill_checklist(checklist_id):
                         file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                         file.save(file_path); photo_paths.append(unique_filename)
                 if photo_paths: answers[component_id]['responses'][rt_id] = photo_paths
-        if not answers:
-            flash("Nenhuma resposta foi enviada.", "warning")
-            return redirect(url_for('fill_checklist', checklist_id=checklist_id))
-        if db.save_flexible_checklist_response(checklist_id, session['user_id'], answers, participants):
-            flash("Checklist respondido com sucesso!", "success")
+        
+        # Passamos as respostas, participantes e o NOVO status
+        if db.save_flexible_checklist_response(checklist_id, session['user_id'], answers, participants, status):
+            if status == 'Rascunho':
+                flash("Progresso guardado! Pode continuar o preenchimento mais tarde.", "info")
+            else:
+                flash("Checklist respondido e concluído com sucesso!", "success")
             return redirect(url_for('dashboard'))
         else:
-            flash("Erro ao salvar o checklist.", "danger")
+            flash("Erro ao guardar o checklist.", "danger")
             return redirect(url_for('fill_checklist', checklist_id=checklist_id))
+            
     checklist_data = db.get_flexible_checklist_for_filling(checklist_id)
     if not checklist_data:
         flash("Checklist não encontrado.", "danger")
@@ -466,6 +546,9 @@ def resubmit_checklist(submission_id):
 @app.route('/save_resubmission/<int:submission_id>', methods=['POST'])
 @login_required
 def save_resubmission(submission_id):
+    action = request.form.get('action', 'submit') # Lê o botão clicado
+    status = 'Rascunho' if action == 'draft' else 'Ativa'
+    
     participants = {'worker_name': request.form.get('worker_name'), 'area_manager_name': request.form.get('area_manager_name')}
     answers = {}
     def ensure_comp_struct(comp_id):
@@ -491,12 +574,26 @@ def save_resubmission(submission_id):
                     file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                     file.save(file_path); photo_paths.append(unique_filename)
             if photo_paths: answers[component_id]['responses'][rt_id] = photo_paths
-    if db.update_submission_answers(submission_id, session['user_id'], answers, participants):
-        flash("Checklist atualizado com sucesso!", "success")
+            
+    # Atualiza o rascunho sem criar um histórico novo caso ainda seja rascunho
+    if db.update_submission_answers(submission_id, session['user_id'], answers, participants, status):
+        if status == 'Rascunho':
+            flash("Rascunho atualizado com sucesso!", "info")
+        else:
+            flash("Checklist finalizado e submetido!", "success")
         return redirect(url_for('dashboard'))
     else:
-        flash("Erro ao salvar as alterações do checklist.", "danger")
+        flash("Erro ao guardar as alterações do checklist.", "danger")
         return redirect(url_for('resubmit_checklist', submission_id=submission_id))
+
+# --- PWA CONFIG ---
+@app.route('/manifest.json')
+def manifest():
+    return app.send_static_file('manifest.json')
+
+@app.route('/sw.js')
+def sw():
+    return app.send_static_file('sw.js')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5001, debug=True)
