@@ -4,16 +4,19 @@
 {% block content %}
 <div class="action-buttons" style="display: flex; justify-content: space-between; margin-bottom: 20px;">
     <a href="{{ url_for('dashboard') }}" class="btn-primary" style="background-color: #95a5a6; text-decoration: none;"><i class="fa-solid fa-arrow-left"></i> Voltar</a>
-    <button type="button" onclick="window.print();" class="btn-primary" style="background-color: #3498db;"><i class="fa-solid fa-print"></i> Imprimir Relatório</button>
+    <div style="display: flex; gap: 15px;">
+        <button type="button" onclick="window.print();" class="btn-primary" style="background-color: #3498db;"><i class="fa-solid fa-print"></i> Imprimir</button>
+        <button type="button" onclick="gerarPDF();" class="btn-primary" style="background-color: #e74c3c; transition: all 0.3s ease;"><i class="fa-solid fa-file-pdf"></i> Gerar PDF Otimizado</button>
+    </div>
 </div>
 
-<div class="card" id="printable-area" style="padding: 40px; border-top: 6px solid var(--cor-principal);">
+<div class="card" id="printable-area" style="padding: 40px; border-top: 6px solid var(--cor-principal); background-color: #ffffff;">
     
     <div style="text-align: center; border-bottom: 2px solid var(--cor-borda); padding-bottom: 25px; margin-bottom: 30px;">
         <img src="{{ url_for('static', filename='images/reunidas1.png') }}" alt="Logo Reunidas" style="max-height: 60px; margin-bottom: 15px;">
         <h1 style="color: var(--cor-principal); font-size: 1.8rem; margin-bottom: 10px;">{{ submission.header.Titulo }}</h1>
         
-        <div style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; color: var(--cor-texto-mutado); flex-wrap: wrap;">
+        <div class="header-info" style="display: flex; justify-content: center; gap: 20px; font-size: 0.9rem; color: var(--cor-texto-mutado); flex-wrap: wrap;">
             <span style="background: #f4f7f6; padding: 5px 12px; border-radius: 15px;"><i class="fa-solid fa-hashtag"></i> ID: <strong>{{ submission.header.ID }}</strong></span>
             <span style="background: #f4f7f6; padding: 5px 12px; border-radius: 15px;"><i class="fa-regular fa-user"></i> Auditado por: <strong>{{ submission.header.NomeUsuario }}</strong></span>
             <span style="background: #f4f7f6; padding: 5px 12px; border-radius: 15px;"><i class="fa-regular fa-calendar"></i> Data: <strong>{{ submission.header.DataSubmissao.strftime('%d/%m/%Y às %H:%M') }}</strong></span>
@@ -21,14 +24,14 @@
     </div>
 
     {% if audit_score %}
-    <div style="background: #e8f5e9; border-left: 5px solid var(--cor-secundaria); padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center;">
+    <div class="score-board" style="background: #e8f5e9; border-left: 5px solid var(--cor-secundaria); padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 35px; display: flex; justify-content: space-between; align-items: center;">
         <div>
             <span style="display: block; font-size: 0.85rem; color: #2e7d32; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Conformidade Global</span>
-            <span style="font-size: 1.5rem; font-weight: bold; color: var(--cor-principal);">{{ audit_score.compliant }}/{{ audit_score.total }} <span style="font-size: 1.1rem; color: #388e3c;">({{ "%.1f"|format(audit_score.percentage) }}%)</span></span>
+            <span class="score-val" style="font-size: 1.5rem; font-weight: bold; color: var(--cor-principal);">{{ audit_score.compliant }}/{{ audit_score.total }} <span style="font-size: 1.1rem; color: #388e3c;">({{ "%.1f"|format(audit_score.percentage) }}%)</span></span>
         </div>
         <div style="text-align: right;">
             <span style="display: block; font-size: 0.85rem; color: #d35400; text-transform: uppercase; font-weight: bold; margin-bottom: 5px;">Itens Sinalizados</span>
-            <span style="font-size: 1.5rem; font-weight: bold; color: #e65100;">{{ audit_score.flagged }}</span>
+            <span class="score-val" style="font-size: 1.5rem; font-weight: bold; color: #e65100;">{{ audit_score.flagged }}</span>
         </div>
     </div>
     {% endif %}
@@ -37,11 +40,11 @@
         {% set component_data = component.data %}
         
         {% if component_data.TipoComponente == 'CATEGORIA' %}
-            <div style="background: var(--cor-principal); color: white; padding: 10px 20px; border-radius: 6px; margin-top: 30px; margin-bottom: 15px;">
+            <div class="category-header" style="background: var(--cor-principal); color: white; padding: 10px 20px; border-radius: 6px; margin-top: 30px; margin-bottom: 15px; page-break-after: avoid;">
                 <h3 style="margin: 0; font-size: 1.1rem;">{{ component_data.TextoComponente }}</h3>
             </div>
             {% if component_data.Instrucao %}
-                <p style="background: #f9fbfb; padding: 12px; border-left: 4px solid #3498db; font-style: italic; font-size: 0.9rem; margin-bottom: 20px; color: var(--cor-texto-mutado);">{{ component_data.Instrucao }}</p>
+                <p class="category-inst" style="background: #f9fbfb; padding: 12px; border-left: 4px solid #3498db; font-style: italic; font-size: 0.9rem; margin-bottom: 20px; color: var(--cor-texto-mutado); page-break-inside: avoid;">{{ component_data.Instrucao }}</p>
             {% endif %}
             
             {% for item in component.children %}
@@ -63,7 +66,7 @@
                 {% for answer in item.answers %}
                     {% if answer.tipo_input == 'file' and answer.fotos %}
                         {% set has_photos = true %}
-                        <div style="margin-bottom: 25px; background: #f9fbfb; padding: 20px; border-radius: 8px; border: 1px solid var(--cor-borda); page-break-inside: avoid;">
+                        <div class="photo-appendix-item" style="margin-bottom: 25px; background: #f9fbfb; padding: 20px; border-radius: 8px; border: 1px solid var(--cor-borda); page-break-inside: avoid;">
                             <p style="font-weight: 600; font-size: 1rem; color: var(--cor-texto); margin-bottom: 15px;"><i class="fa-solid fa-angle-right" style="color: var(--cor-secundaria);"></i> {{ item.data.TextoComponente }}</p>
                             <div style="display: flex; flex-wrap: wrap; gap: 15px;">
                                 {% for photo in answer.fotos %}
@@ -82,7 +85,7 @@
         {% endif %}
     </div>
 
-    <div style="display: flex; justify-content: space-around; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--cor-borda); page-break-inside: avoid; text-align: center;">
+    <div class="signatures" style="display: flex; justify-content: space-around; margin-top: 60px; padding-top: 40px; border-top: 1px solid var(--cor-borda); page-break-inside: avoid; text-align: center;">
         <div style="width: 30%;">
             <div style="border-bottom: 1px solid var(--cor-texto); margin-bottom: 10px;"></div>
             <div style="font-weight: 600; font-size: 0.95rem;">{{ submission.header.NomeUsuario }}</div>
@@ -102,25 +105,94 @@
 </div>
 
 <style>
+    /* Ocultar elementos desnecessários da impressão */
     @media print { 
         body * { visibility: hidden; }
         .sidebar, .top-header, .action-buttons { display: none !important; }
         #printable-area, #printable-area * { visibility: visible; }
         #printable-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 0; box-shadow: none; border: none; }
-        .answer-photo-gallery { display: none; } /* Oculta as thumbnails nas respostas durante a impressão para poupar espaço */
+        .answer-photo-gallery { display: none; } 
     }
+
+    /* ==== CSS MAGICO: OTIMIZAR PARA PDF E IMPRESSÃO ==== */
+    .report-mode {
+        padding: 10px !important; border: none !important; box-shadow: none !important; background: #fff !important;
+    }
+    .report-mode * { box-shadow: none !important; line-height: 1.2 !important; }
+    
+    /* Cabeçalho comprimido */
+    .report-mode img { max-height: 45px !important; margin-bottom: 5px !important; }
+    .report-mode h1 { font-size: 1.2rem !important; margin-bottom: 5px !important; }
+    .report-mode .header-info { gap: 8px !important; margin-bottom: 10px !important; }
+    .report-mode .header-info span { padding: 3px 8px !important; font-size: 0.75rem !important; border: 1px solid #ddd !important; background: #fff !important; }
+    
+    .report-mode .score-board { padding: 10px !important; margin-bottom: 15px !important; border-width: 3px !important; }
+    .report-mode .score-board span { font-size: 0.75rem !important; margin-bottom: 2px !important; }
+    .report-mode .score-board .score-val { font-size: 1.1rem !important; }
+    
+    .report-mode .category-header { padding: 6px 10px !important; margin-top: 15px !important; margin-bottom: 5px !important; border-radius: 4px !important; }
+    .report-mode .category-header h3 { font-size: 0.95rem !important; }
+    .report-mode .category-inst { padding: 4px 8px !important; font-size: 0.75rem !important; margin-bottom: 8px !important; }
+
+    /* Pulo do gato: Pergunta e Resposta Lado a Lado */
+    .report-mode .item-card {
+        margin-bottom: 6px !important;
+        border-top: 2px solid #3498db !important;
+        border-radius: 4px !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: stretch !important;
+        page-break-inside: avoid;
+        flex-wrap: wrap; /* Permite quebrar linha se tiver observação */
+    }
+    .report-mode .item-card-header {
+        background-color: #f9f9f9 !important;
+        padding: 6px 10px !important;
+        border-bottom: none !important;
+        border-right: 1px solid #eee !important;
+        width: 65% !important; /* Pergunta ocupa 65% da linha */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+    }
+    .report-mode .item-card-header h4 { font-size: 0.85rem !important; }
+    .report-mode .item-card-header p { font-size: 0.7rem !important; margin-top: 3px !important; display: none !important; } /* Oculta instrução no PDF para poupar espaço */
+    
+    .report-mode .item-answers {
+        padding: 6px 10px !important;
+        width: 35% !important; /* Resposta ocupa 35% da linha */
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: center !important;
+    }
+    .report-mode .answer-pair { margin-bottom: 0 !important; width: 100%; text-align: center; }
+    .report-mode .answer-box { padding: 4px 6px !important; min-width: 0 !important; width: 100% !important; border-width: 1px !important; border-radius: 4px !important; }
+    .report-mode .answer-value { font-size: 0.85rem !important; font-weight: bold !important; }
+    
+    .report-mode .observation { margin-top: 4px !important; padding-top: 4px !important; border-top: 1px dashed #eee !important; text-align: left !important; width: 100% !important; }
+    .report-mode .observation-text { padding: 4px 8px !important; font-size: 0.75rem !important; border-left: 3px solid #f39c12 !important; }
+    
+    /* Encolher galeria fotográfica */
+    .report-mode .photo-appendix { margin-top: 20px !important; padding-top: 15px !important; }
+    .report-mode .photo-appendix img { max-width: 80px !important; height: auto !important; border-radius: 4px !important; }
+    .report-mode .photo-appendix-item { padding: 8px !important; margin-bottom: 8px !important; }
+    .report-mode .photo-appendix-item p { font-size: 0.85rem !important; margin-bottom: 5px !important; }
+
+    .report-mode .signatures { margin-top: 30px !important; padding-top: 20px !important; }
+    .report-mode .signatures > div { font-size: 0.75rem !important; }
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5ifS5QtgpiJtWd43JWSuIgh7mbzZ8zBps+dvLusV+eNQATqgA/HdeKFVgA5v3S/cIrLF7QnIg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Encontra todas as respostas guardadas e verifica se são um Pacote JSON (de uma tabela)
         document.querySelectorAll('.json-formatter').forEach(function(el) {
             let val = el.dataset.raw;
             if (val && val.startsWith('{') && val.endsWith('}')) {
                 try {
                     let obj = JSON.parse(val);
-                    let html = '<ul style="margin: 0; padding-left: 15px; font-size: 0.9rem; list-style-type: square; color: #2c3e50;">';
-                    // Constrói uma mini-lista com as linhas preenchidas
+                    let html = '<ul style="margin: 0; padding-left: 15px; font-size: 0.9rem; list-style-type: square; color: #2c3e50; text-align: left;">';
                     for(let k in obj) { 
                         if(obj[k] && obj[k].trim() !== '') {
                             html += '<li style="margin-bottom: 4px;"><strong>' + k + ':</strong> ' + obj[k] + '</li>'; 
@@ -132,6 +204,38 @@
             }
         });
     });
-</script>
 
+    // Se o usuário apertar Ctrl+P, comprime a tela antes de imprimir
+    window.addEventListener('beforeprint', () => { document.getElementById('printable-area').classList.add('report-mode'); });
+    window.addEventListener('afterprint', () => { document.getElementById('printable-area').classList.remove('report-mode'); });
+
+    function gerarPDF() {
+        const elemento = document.getElementById('printable-area');
+        const botao = document.querySelector('button[onclick="gerarPDF();"]');
+        const textoOriginal = botao.innerHTML;
+        
+        botao.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Preparando PDF...';
+        botao.style.opacity = '0.8';
+        botao.disabled = true;
+
+        // Ativa a classe que espreme o formulário e o deixa igual a uma tabela
+        elemento.classList.add('report-mode');
+
+        const opt = {
+            margin:       [10, 10, 15, 10], 
+            filename:     'Auditoria_{{ submission.header.ID }}_{{ submission.header.Titulo|replace(" ", "_") }}.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(elemento).save().then(function() {
+            // Remove a classe e volta o formulário ao normal na tela
+            elemento.classList.remove('report-mode');
+            botao.innerHTML = textoOriginal;
+            botao.style.opacity = '1';
+            botao.disabled = false;
+        });
+    }
+</script>
 {% endblock %}

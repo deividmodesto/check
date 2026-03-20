@@ -28,11 +28,11 @@
             {% set items_to_render = component.children if component.data.TipoComponente == 'CATEGORIA' else [component] %}
             
             {% if component.data.TipoComponente == 'CATEGORIA' %}
-                <div style="background: var(--cor-principal); color: #fff; padding: 12px 20px; border-radius: 8px 8px 0 0; margin-top: 30px;">
-                    <h3 style="margin: 0; font-size: 1.1rem;"><i class="fa-solid fa-layer-group"></i> {{ component.data.TextoComponente }}</h3>
+                <div style="background: var(--cor-principal); color: #fff; padding: 15px 20px; border-radius: 8px 8px 0 0; margin-top: 40px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0; font-size: 1.2rem;"><i class="fa-solid fa-layer-group"></i> {{ component.data.TextoComponente }}</h3>
                 </div>
                 {% if component.data.Instrucao %}
-                    <div style="background: #e8f4f8; padding: 12px 20px; border-left: 4px solid #3498db; color: #2c3e50; font-size: 0.9rem;">
+                    <div style="background: #e8f4f8; padding: 12px 20px; border-left: 4px solid #3498db; color: #2c3e50; font-size: 0.95rem;">
                         <i class="fa-solid fa-circle-info"></i> {{ component.data.Instrucao }}
                     </div>
                 {% endif %}
@@ -40,86 +40,93 @@
 
             {% for item in items_to_render %}
                 {% set item_data = item.data %}
-                <div class="card" style="{% if component.data.TipoComponente == 'CATEGORIA' %}border-radius: 0 0 8px 8px; border-top: none; margin-bottom: 15px;{% elif item_data.TipoComponente == 'TABELA' %}margin-top: 20px; border-top: 4px solid #9b59b6;{% else %}margin-top: 20px; border-top: 4px solid #3498db;{% endif %} padding: 25px; overflow-x: auto;">
+                
+                <div class="card" style="margin-bottom: 30px; padding: 0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-radius: 8px; {% if component.data.TipoComponente == 'CATEGORIA' %}border-top: 1px solid var(--cor-borda); border-left: 4px solid var(--cor-secundaria);{% elif item_data.TipoComponente == 'TABELA' %}border-top: 4px solid #9b59b6; margin-top: 30px;{% else %}border-top: 4px solid #3498db; margin-top: 30px;{% endif %}">
                     
-                    <h4 style="font-size: 1.15rem; color: var(--cor-texto); margin-bottom: {% if item_data.Instrucao and item_data.TipoComponente != 'TABELA' %}5px{% else %}20px{% endif %};">{{ item_data.TextoComponente }}</h4>
-                    
-                    {% if item_data.TipoComponente == 'TABELA' %}
-                        <table style="width: 100%; border-collapse: collapse; min-width: 600px; margin-bottom: 15px;">
-                            <thead>
-                                <tr>
-                                    <th style="padding: 10px; border-bottom: 2px solid var(--cor-borda); text-align: left; background: #f9fbfb;">Linha / Horário</th>
-                                    {% for rt in item.response_types %}
-                                        <th style="padding: 10px; border-bottom: 2px solid var(--cor-borda); text-align: center; background: #f9fbfb; color: var(--cor-principal);">{{ rt.details.Nome }}</th>
-                                    {% endfor %}
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% set linhas = item_data.Instrucao.split(',') %}
-                                {% for linha in linhas %}
-                                    <tr style="border-bottom: 1px solid #eee;">
-                                        <td style="padding: 12px 10px; font-weight: 600; color: #555;">{{ linha.strip() }}</td>
-                                        {% for rt in item.response_types %}
-                                            <td style="padding: 5px; text-align: center;">
-                                                <input type="text" class="form-control dyn-cell-input input-{{ item_data.ID }}-{{ rt.details.ID }}" data-comp="{{ item_data.ID }}" data-rt="{{ rt.details.ID }}" data-row="{{ linha.strip() }}" style="text-align: center; padding: 8px;">
-                                            </td>
-                                        {% endfor %}
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-
-                        {% for rt in item.response_types %}
-                            {% set current_json = existing_answers[item_data.ID][rt.details.ID] if existing_answers and item_data.ID in existing_answers and rt.details.ID in existing_answers[item_data.ID] else '{}' %}
-                            <input type="hidden" name="answer_{{ item_data.ID }}_{{ rt.details.ID }}" id="json_{{ item_data.ID }}_{{ rt.details.ID }}" value="{{ current_json }}">
-                        {% endfor %}
-
-                    {% else %}
-                        {% if item_data.Instrucao %}
-                            <p style="font-size: 0.85rem; color: var(--cor-texto-mutado); margin-bottom: 20px;"><i class="fa-solid fa-circle-info"></i> {{ item_data.Instrucao }}</p>
-                        {% endif %}
+                    <div style="background-color: #f4f8f7; padding: 25px 30px; border-bottom: 2px solid #e1e8ed;">
+                        <h4 style="font-size: 1.25rem; color: var(--cor-principal); margin: 0;">{{ item_data.TextoComponente }}</h4>
                         
-                        <div style="display: flex; flex-direction: column; gap: 20px; background: #f9fbfb; padding: 20px; border-radius: 8px; border: 1px solid var(--cor-borda);">
-                            {% for rt in item.response_types %}
-                                {% set rt_details = rt.details %}
-                                {% set current_answer = existing_answers[item_data.ID][rt_details.ID] if existing_answers and item_data.ID in existing_answers and rt_details.ID in existing_answers[item_data.ID] else '' %}
-                                
-                                <div class="response-group">
-                                    {% if rt_details.TipoInput != 'textarea' %}
-                                        <label style="font-weight: 600; color: var(--cor-principal); display: block; margin-bottom: 10px;">{{ rt_details.Nome }}:</label>
-                                    {% endif %}
-                                    
-                                    {% if rt_details.TipoInput == 'radio' %}
-                                        <div style="display: flex; flex-wrap: wrap; gap: 15px;">
-                                            {% for option in rt.options %}
-                                                <label class="radio-pill">
-                                                    <input type="radio" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" value="{{ option }}" {% if option == current_answer %}checked{% endif %} required>
-                                                    <span>{{ option }}</span>
-                                                </label>
+                        {% if item_data.Instrucao and item_data.TipoComponente != 'TABELA' %}
+                            <p style="font-size: 0.95rem; color: #5a6c65; margin: 12px 0 0 0;"><i class="fa-solid fa-circle-info" style="color: #3498db; margin-right: 5px;"></i> {{ item_data.Instrucao }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="padding: 30px; background-color: #ffffff;">
+                        {% if item_data.TipoComponente == 'TABELA' %}
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; border-collapse: collapse; min-width: 600px; margin-bottom: 5px;">
+                                    <thead>
+                                        <tr>
+                                            <th style="padding: 10px; border-bottom: 2px solid var(--cor-borda); text-align: left; background: #f9fbfb;">Linha / Horário</th>
+                                            {% for rt in item.response_types %}
+                                                <th style="padding: 10px; border-bottom: 2px solid var(--cor-borda); text-align: center; background: #f9fbfb; color: var(--cor-principal);">{{ rt.details.Nome }}</th>
                                             {% endfor %}
-                                        </div>
-                                    {% elif rt_details.TipoInput == 'file' %}
-                                        <div style="border: 2px dashed #bdc3c7; padding: 15px; text-align: center; border-radius: 8px; background: #fff;">
-                                            <i class="fa-solid fa-camera" style="font-size: 1.5rem; color: var(--cor-texto-mutado); margin-bottom: 10px;"></i><br>
-                                            <input type="file" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" accept="image/*" multiple style="width: 100%;">
-                                            {% if current_answer %}<p style="font-size: 0.8rem; color: #f39c12; margin-top: 10px;"><i>Arquivos atuais serão mantidos se nenhum novo for enviado.</i></p>{% endif %}
-                                        </div>
-                                    {% elif rt_details.TipoInput == 'date' %}
-                                        <input type="date" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" class="form-control" value="{{ current_answer }}" required style="max-width: 250px;">
-                                    {% elif rt_details.TipoInput == 'textarea' %}
-                                        <textarea name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" rows="3" placeholder="Digite a observação principal aqui..." class="form-control" required>{{ current_answer }}</textarea>
-                                    {% elif rt_details.TipoInput == 'text' %}
-                                        <input type="text" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" class="form-control" value="{{ current_answer }}" placeholder="Digite a resposta aqui..." required>
-                                    {% endif %}
-                                </div>
-                            {% endfor %}
-                            
-                            <div class="response-group" style="border-top: 1px dashed var(--cor-borda); padding-top: 15px; margin-top: 5px;">
-                                <label style="font-size: 0.85rem; color: var(--cor-texto-mutado); font-style: italic; display: block; margin-bottom: 8px;">Observação Adicional (Opcional)</label>
-                                <input type="text" name="observation_{{ item_data.ID }}" class="form-control" placeholder="Algum detalhe extra que deva ser registado?">
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% set linhas = item_data.Instrucao.split(',') %}
+                                        {% for linha in linhas %}
+                                            <tr style="border-bottom: 1px solid #eee;">
+                                                <td style="padding: 15px 10px; font-weight: 600; color: #555;">{{ linha.strip() }}</td>
+                                                {% for rt in item.response_types %}
+                                                    <td style="padding: 8px 5px; text-align: center;">
+                                                        <input type="text" class="form-control dyn-cell-input input-{{ item_data.ID }}-{{ rt.details.ID }}" data-comp="{{ item_data.ID }}" data-rt="{{ rt.details.ID }}" data-row="{{ linha.strip() }}" style="text-align: center; padding: 10px;">
+                                                    </td>
+                                                {% endfor %}
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
                             </div>
-                        </div>
-                    {% endif %}
+
+                            {% for rt in item.response_types %}
+                                {% set current_json = existing_answers[item_data.ID][rt.details.ID] if existing_answers and item_data.ID in existing_answers and rt.details.ID in existing_answers[item_data.ID] else '{}' %}
+                                <input type="hidden" name="answer_{{ item_data.ID }}_{{ rt.details.ID }}" id="json_{{ item_data.ID }}_{{ rt.details.ID }}" value="{{ current_json }}">
+                            {% endfor %}
+
+                        {% else %}
+                            <div style="display: flex; flex-direction: column; gap: 25px;">
+                                {% for rt in item.response_types %}
+                                    {% set rt_details = rt.details %}
+                                    {% set current_answer = existing_answers[item_data.ID][rt_details.ID] if existing_answers and item_data.ID in existing_answers and rt_details.ID in existing_answers[item_data.ID] else '' %}
+                                    
+                                    <div class="response-group">
+                                        {% if rt_details.TipoInput != 'textarea' %}
+                                            <label style="font-weight: 600; color: var(--cor-principal); display: block; margin-bottom: 12px;">{{ rt_details.Nome }}:</label>
+                                        {% endif %}
+                                        
+                                        {% if rt_details.TipoInput == 'radio' %}
+                                            <div style="display: flex; flex-wrap: wrap; gap: 15px;">
+                                                {% for option in rt.options %}
+                                                    <label class="radio-pill">
+                                                        <input type="radio" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" value="{{ option }}" {% if option == current_answer %}checked{% endif %} required>
+                                                        <span>{{ option }}</span>
+                                                    </label>
+                                                {% endfor %}
+                                            </div>
+                                        {% elif rt_details.TipoInput == 'file' %}
+                                            <div style="border: 2px dashed #bdc3c7; padding: 25px; text-align: center; border-radius: 8px; background: #f9fbfb; transition: all 0.3s ease;">
+                                                <i class="fa-solid fa-camera" style="font-size: 2rem; color: #95a5a6; margin-bottom: 15px;"></i><br>
+                                                <input type="file" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" accept="image/*" multiple style="width: 100%; max-width: 300px; margin: 0 auto;">
+                                                {% if current_answer %}<p style="font-size: 0.85rem; color: #f39c12; margin-top: 15px;"><i>Arquivos atuais serão mantidos se nenhum novo for enviado.</i></p>{% endif %}
+                                            </div>
+                                        {% elif rt_details.TipoInput == 'date' %}
+                                            <input type="date" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" class="form-control" value="{{ current_answer }}" required style="max-width: 250px;">
+                                        {% elif rt_details.TipoInput == 'textarea' %}
+                                            <textarea name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" rows="3" placeholder="Digite a observação principal aqui..." class="form-control" required style="resize: vertical;">{{ current_answer }}</textarea>
+                                        {% elif rt_details.TipoInput == 'text' %}
+                                            <input type="text" name="answer_{{ item_data.ID }}_{{ rt_details.ID }}" class="form-control" value="{{ current_answer }}" placeholder="Digite a resposta aqui..." required>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                                
+                                <div class="response-group" style="border-top: 2px dashed #f0f0f0; padding-top: 20px; margin-top: 10px;">
+                                    <label style="font-size: 0.9rem; color: var(--cor-texto-mutado); font-style: italic; display: block; margin-bottom: 8px;"><i class="fa-regular fa-comment-dots"></i> Observação Adicional (Opcional)</label>
+                                    <input type="text" name="observation_{{ item_data.ID }}" class="form-control" placeholder="Algum detalhe extra que deva ser registado para este item?">
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
         {% endfor %}
@@ -195,8 +202,8 @@
         /* Estilização moderna para os Radio Buttons virarem "Pílulas" (Pills) clicáveis */
         .radio-pill { display: inline-block; cursor: pointer; }
         .radio-pill input[type="radio"] { display: none; }
-        .radio-pill span { display: inline-block; padding: 10px 20px; background: #fff; border: 1px solid var(--cor-borda); border-radius: 20px; color: var(--cor-texto); font-weight: 500; transition: var(--transicao); }
-        .radio-pill input[type="radio"]:checked + span { background-color: var(--cor-secundaria); border-color: var(--cor-secundaria); color: white; box-shadow: 0 2px 8px rgba(5, 181, 64, 0.3); }
+        .radio-pill span { display: inline-block; padding: 12px 24px; background: #fff; border: 2px solid #e1e8ed; border-radius: 30px; color: var(--cor-texto); font-weight: 500; font-size: 1.05rem; transition: all 0.2s ease; }
+        .radio-pill input[type="radio"]:checked + span { background-color: var(--cor-secundaria); border-color: var(--cor-secundaria); color: white; box-shadow: 0 4px 12px rgba(5, 181, 64, 0.3); transform: translateY(-2px); }
         .radio-pill:hover span { border-color: var(--cor-secundaria); }
     </style>
 {% endblock %}
