@@ -1,28 +1,44 @@
-<div class="item-card">
-    <p class="item-question">{{ item.data.TextoComponente }}</p>
-    {% if item.data.Instrucao %}<p class="item-instruction">{{ item.data.Instrucao }}</p>{% endif %}
-    <hr>
-    <div class="item-answers">
+<div class="item-card" style="margin-bottom: 30px; padding: 0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08); border-radius: 8px; border-top: 4px solid #3498db; background-color: #fff; page-break-inside: avoid;">
+    
+    <div class="item-card-header" style="background-color: #f4f8f7; padding: 20px 25px; border-bottom: 2px solid #e1e8ed;">
+        <h4 style="font-size: 1.15rem; color: var(--cor-principal); margin: 0; font-weight: 600;">{{ item.data.TextoComponente }}</h4>
+        
+        {% if item.data.Instrucao %}
+            <p style="font-size: 0.9rem; color: #5a6c65; margin: 10px 0 0 0;"><i class="fa-solid fa-circle-info" style="color: #3498db; margin-right: 5px;"></i> {{ item.data.Instrucao }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="item-answers" style="padding: 25px;">
         {% for answer in item.answers %}
-            <div class="answer-pair">
-                <span class="answer-label">{{ answer.tipo_nome }}:</span>
+            <div class="answer-pair" style="margin-bottom: 15px;">
                 {% if answer.tipo_input == 'file' and answer.fotos %}
-                    <div class="answer-photo-gallery">
+                    <div class="answer-photo-gallery" style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
                         {% for photo in answer.fotos %}
                         <a href="{{ url_for('uploaded_file', filename=photo) }}" target="_blank" title="Clique para ampliar">
-                            <img src="{{ url_for('uploaded_file', filename=photo) }}" alt="Foto Anexada">
+                            <img src="{{ url_for('uploaded_file', filename=photo) }}" alt="Foto Anexada" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                         </a>
                         {% endfor %}
                     </div>
                 {% else %}
-                    <span class="answer-value json-formatter {% if answer.is_conforme == False %}non-compliant{% elif answer.is_conforme == True %}compliant{% endif %}" data-raw="{{ answer.valor }}">{{ answer.valor }}</span>
+                    <div class="answer-box" style="background: {% if answer.is_conforme == False %}#fdebd0{% elif answer.is_conforme == True %}#e8f5e9{% else %}#f9fbfb{% endif %}; 
+                                border: 1px solid {% if answer.is_conforme == False %}#e67e22{% elif answer.is_conforme == True %}#2ecc71{% else %}var(--cor-borda){% endif %}; 
+                                padding: 12px 20px; border-radius: 6px; display: inline-block; min-width: 50%;">
+                        
+                        <span class="answer-value json-formatter" data-raw="{{ answer.valor }}" 
+                              style="font-size: 1.05rem; font-weight: 500; color: {% if answer.is_conforme == False %}#d35400{% elif answer.is_conforme == True %}#27ae60{% else %}var(--cor-texto){% endif %};">
+                            {{ answer.valor }}
+                        </span>
+                    </div>
                 {% endif %}
             </div>
         {% endfor %}
+
         {% if item.answers and item.answers|length > 0 and item.answers[0].observacao %}
-            <div class="answer-pair observation">
-                <span class="answer-label">Observação Adicional:</span>
-                <span class="answer-value">{{ item.answers[0].observacao }}</span>
+            <div class="answer-pair observation" style="margin-top: 25px; border-top: 2px dashed #f0f0f0; padding-top: 20px;">
+                <span class="answer-label" style="font-size: 0.9rem; color: var(--cor-texto-mutado); font-style: italic; display: block; margin-bottom: 8px;"><i class="fa-regular fa-comment-dots"></i> Observação Adicional:</span>
+                <div class="observation-text" style="background: #fff8e1; padding: 15px; border-radius: 6px; border-left: 4px solid #f39c12; color: #555; font-size: 0.95rem;">
+                    {{ item.answers[0].observacao }}
+                </div>
             </div>
         {% endif %}
     </div>
